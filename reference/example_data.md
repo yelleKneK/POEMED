@@ -1,0 +1,92 @@
+# Example high-dimensional mediation data sets
+
+Three small simulated data sets, one per outcome type, for trying the
+POEMED tests and reproducing the help-page examples. Each was generated
+by
+[`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md)
+under a homogeneous mediation pattern (a few same-sign active mediators
+among many null ones) with three confounders, at seed 113, so the
+generating truth is known and travels with the data.
+
+## Format
+
+Each is a list, the return value of
+[`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md),
+with components:
+
+- X:
+
+  Exposure matrix, \\n \times 1\\.
+
+- M:
+
+  Candidate mediator matrix, \\n \times 100\\.
+
+- Y:
+
+  Outcome vector of length \\n\\: continuous for `example_continuous`,
+  0/1 for `example_binary`, nonnegative counts for `example_count`.
+
+- Z:
+
+  Confounder matrix, \\n \times 3\\.
+
+- alpha_m, Gamma_x, alpha_x:
+
+  The mediator-on-outcome, exposure-on-mediator, and direct-effect
+  coefficients used to generate the data.
+
+- beta:
+
+  The total indirect effect \\\Gamma_x \alpha_m\\.
+
+- active_mediators:
+
+  Indices of the truly active mediators.
+
+- n, p, q, outcome, pattern:
+
+  The generating settings.
+
+The sample sizes are \\n = 200\\ (`example_continuous`) and \\n = 300\\
+(`example_binary`, `example_count`).
+
+## Source
+
+Simulated with
+[`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md);
+see `data-raw/example_data.R` in the package sources.
+
+## See also
+
+[`pe_mediation()`](https://yelleknek.github.io/POEMED/reference/pe_mediation.md),
+[`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md).
+
+## Examples
+
+``` r
+data(example_continuous)
+str(example_continuous$active_mediators)
+#>  int [1:5] 1 2 3 4 5
+fit <- pe_mediation(example_continuous$X, example_continuous$Y,
+                    example_continuous$M, Z = example_continuous$Z,
+                    outcome = "continuous")
+fit
+#>  term                  value   
+#>  stat_hdmm             3.289   
+#>  pval_hdmm             0.0698  
+#>  stat_pe               327     
+#>  j_pe                  323.7   
+#>  pval_pe               < 0.0001
+#>  total_indirect_effect 0.2513  
+#>  total_indirect_lower  -0.0203 
+#>  total_indirect_upper  0.5229  
+#>  n_active_mediators    1       
+#>  df                    1       
+#>  n_candidate_mediators 100     
+#>  n_observations        200     
+#> 
+#> Outcome model: continuous (linear)
+#> Active mediators identified (1): 4
+#> Tuning parameter (HBIC): lambda = 0.211 from 20 values in [0.211, 0.411] (the grid's lower end)
+```
