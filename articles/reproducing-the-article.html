@@ -6,7 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Reproducing the Article's Analyses With POEMED • POEMED</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- katex math --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -34,7 +35,9 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="../articles/reproducing-the-article.html">Reproducing the Article's Analyses With POEMED</a></li>
+    <li><a class="dropdown-item" href="../articles/poemed-vs-competitors.html">POEMED and the Competition: A Head-to-Head</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
@@ -66,19 +69,19 @@
 
     
     
-<p>This vignette walks through <strong>each analysis in the
-article</strong> “Power Enhancement in High-Dimensional Heterogeneous
-Mediation Analysis” (in press at the <em>Journal of the American
-Statistical Association</em>) and reproduces it with POEMED. It follows
-the article’s own structure: the Monte Carlo simulation study (its
-Section 4, with the identification study in Section S.4.1 of its
-supplement) and the empirical data analysis (its Section 5). The
-companion vignette <em>Power Enhancement for High-Dimensional Mediation:
-A Guided Tour</em> introduces the method itself; here the focus is
-faithful replication.</p>
-<p><strong>Two things to keep in mind while reading.</strong></p>
-<ol style="list-style-type: decimal">
-<li><p><em>Scope of the comparison.</em> The article benchmarks the
+<p>This vignette accompanies the article “Power Enhancement in
+High-Dimensional Heterogeneous Mediation Analysis” (Yu and Kelley, in
+press at the <em>Journal of the American Statistical Association</em>).
+Its second part reruns the article’s empirical data analysis (its
+Section 5) with POEMED and reads the package’s results against the
+printed tables, cell by cell. Its first part describes the article’s
+simulation designs (its Section 4, and Sections S.4.1 and S.4.4 of its
+supplement) and gives the calls that run each of them at the article’s
+scale, on the grids of the article’s own scripts where the article
+records one. The companion vignette <em>Power Enhancement for
+High-Dimensional Mediation: A Guided Tour</em> introduces the method
+itself.</p>
+<p><strong>Scope of the comparison.</strong> The article benchmarks the
 power-enhanced tests (PE-HDMM for linear outcomes, PE-HDGMM for
 generalized outcomes) against several competitors: HDMM, HILMA, and
 GlobalTest. POEMED implements the proposed PE tests and the
@@ -86,20 +89,14 @@ GlobalTest. POEMED implements the proposed PE tests and the
 that the PE component augments). Every POEMED result therefore reports
 the central contrast of the article’s figures and tables, <strong>PE
 versus HDMM</strong>; HILMA and GlobalTest are separate methods outside
-this package.</p></li>
-<li><p><em>Run size.</em> The article’s simulations use
-<code>n = 300</code>, <code>p = 500</code>, and <strong>1,000
-replications</strong> per design point. Reproducing that here would take
-far too long for a vignette, so the live code uses small <code>n</code>,
-<code>p</code>, and <code>n_rep</code>; the curves have the right
-<em>shape</em> but are noisier. Each simulation section also shows the
-exact article settings in an <code>eval = FALSE</code> block you can run
-yourself.</p></li>
-</ol>
+this package.</p>
+<p>Load the package and fix the random-number seed before running any of
+the code below:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/yelleKneK/POEMED" class="external-link">POEMED</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="part-i--monte-carlo-simulation-article-section-4">Part I. Monte Carlo Simulation (Article Section 4)<a class="anchor" aria-label="anchor" href="#part-i--monte-carlo-simulation-article-section-4"></a>
+<h2 id="part-i--the-articles-simulation-designs-article-section-4">Part I. The Article’s Simulation Designs (Article Section 4)<a class="anchor" aria-label="anchor" href="#part-i--the-articles-simulation-designs-article-section-4"></a>
 </h2>
 <p>The simulation study asks two questions of every test. Under the
 global null of no active mediator (<code>c1 = 0</code>) the rejection
@@ -109,19 +106,26 @@ null (<code>c1 != 0</code>) the rejection rate estimates
 <strong>power</strong>. <code><a href="../reference/pe_power_curve.html">pe_power_curve()</a></code> sweeps
 <code>c1</code> and returns both the benchmark
 (<code>rejection_hdmm</code>) and power-enhanced
-(<code>rejection_pe</code>) rejection rates at each grid point.</p>
-<p>A small helper draws an article-style rejection-rate figure for one
-design:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plot_rejection</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">pc</span>, <span class="va">main</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pc</span><span class="op">$</span><span class="va">c1</span>, <span class="va">pc</span><span class="op">$</span><span class="va">rejection_pe</span>, type <span class="op">=</span> <span class="st">"b"</span>, pch <span class="op">=</span> <span class="fl">19</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>       xlab <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">c</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">*</span> <span class="st">"  (signal strength)"</span><span class="op">)</span>,</span>
-<span>       ylab <span class="op">=</span> <span class="st">"empirical rejection rate"</span>, main <span class="op">=</span> <span class="va">main</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">pc</span><span class="op">$</span><span class="va">c1</span>, <span class="va">pc</span><span class="op">$</span><span class="va">rejection_hdmm</span>, type <span class="op">=</span> <span class="st">"b"</span>, pch <span class="op">=</span> <span class="fl">1</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0.05</span>, col <span class="op">=</span> <span class="st">"grey60"</span>, lty <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"right"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PE (proposed)"</span>, <span class="st">"HDMM (benchmark)"</span><span class="op">)</span>,</span>
-<span>         pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">19</span>, <span class="fl">1</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+(<code>rejection_pe</code>) rejection rates at each grid point, and
+<code><a href="../reference/pe_simulation_study.html">pe_simulation_study()</a></code> runs several patterns at once and
+stacks the results.</p>
+<p>The article’s designs use <code>n = 300</code>, <code>p = 500</code>,
+and <strong>1,000 replications</strong> per design point, and its
+scripts search a tuning grid set by hand for each outcome family: 20
+values from 0.2 to 0.39 for the linear model, 15 values from 0.04 to 0.2
+for the logistic model, and 15 values from 0.7 to 5 for the Poisson
+model. (The linear script searched a second grid, 20 values from 0.27 to
+0.46, for the reduced model that the benchmark test needs; the package
+searches one grid for both fits, so the calls below pass the full-model
+grid.) The calls below for Sections 4.1, 4.2, and S.4.1 pass those grids
+as <code>lambda_grid</code>, so they run the article’s designs as its
+scripts did, whatever the package’s default grid (100 values from 0.05
+to 10); the article records no grid for the real-data-motivated setting
+of Section S.4.4, whose call uses the package default. The chunks in
+this part are shown but not run: a linear or logistic panel takes one to
+a few hours of computing at this scale, and the Poisson homogeneous
+panel days. Set <code>cores</code> above 1 to parallelize; a seeded run
+repeats exactly at the same number of cores.</p>
 <div class="section level3">
 <h3 id="section-4-1-linear-mediation-models">Section 4.1: Linear Mediation Models<a class="anchor" aria-label="anchor" href="#section-4-1-linear-mediation-models"></a>
 </h3>
@@ -129,10 +133,10 @@ design:</p>
 continuous outcomes and <code>p = 500</code> candidate mediators whose
 noise has an autoregressive <code>0.5^|i-j|</code> covariance. The
 mediator-exposure coefficient is <code>Gamma_x = c1 * tau</code>, where
-<code>tau</code> is 0.1, 0.2, 0.3, 0.4, 0.5 for the five mediators with
-a nonzero outcome coefficient and an independent N(0, 0.5^2) draw for
-each of the others, the direct effect is <code>c2 = 0.5</code>, and two
-outcome-mediator patterns are contrasted:</p>
+<code>tau</code> is 0.1, 0.2, 0.3, 0.4, 0.5 for the first five mediators
+and an independent N(0, 0.5^2) draw for each of the others, the direct
+effect is <code>c2 = 0.5</code>, and two outcome-mediator patterns are
+contrasted:</p>
 <ul>
 <li>
 <strong>Setting (i), homogeneous:</strong>
@@ -152,125 +156,37 @@ power.</li>
 <p>POEMED maps these to <code>pattern = "homogeneous"</code> and
 <code>pattern = "contrasting"</code> in
 <code><a href="../reference/simulate_mediation_data.html">simulate_mediation_data()</a></code> and
-<code><a href="../reference/pe_power_curve.html">pe_power_curve()</a></code>. The reduced live run (the article’s
-Figure for linear models):</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span>
-<span><span class="va">lm_homo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>, p <span class="op">=</span> <span class="fl">50</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                          pattern <span class="op">=</span> <span class="st">"homogeneous"</span>,</span>
-<span>                          c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                          c2 <span class="op">=</span> <span class="fl">0.5</span>, n_rep <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
-<span><span class="va">lm_cont</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>, p <span class="op">=</span> <span class="fl">50</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                          pattern <span class="op">=</span> <span class="st">"contrasting"</span>,</span>
-<span>                          c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                          c2 <span class="op">=</span> <span class="fl">0.5</span>, n_rep <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu">plot_rejection</span><span class="op">(</span><span class="va">lm_homo</span>, <span class="st">"(i) homogeneous"</span><span class="op">)</span></span>
-<span><span class="fu">plot_rejection</span><span class="op">(</span><span class="va">lm_cont</span>, <span class="st">"(ii) contrasting"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reproducing-the-article_files/figure-html/lm-curves-1.png" class="r-plt" alt="Reduced reproduction of the article's linear-model rejection-rate figure for the homogeneous and contrasting settings" width="672"></p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
-<p>At this reduced design (<code>n = 150</code>, <code>p = 50</code>, 25
-replications, so a Monte Carlo standard error of up to 0.10 per rate)
-the curves have the article’s shape, not its values. Under the
-<strong>homogeneous</strong> setting both tests gain power as the signal
-grows (at <code>c1 = 1</code>, benchmark 0.84, PE 0.96). Under the
-<strong>contrasting</strong> setting the benchmark rejects in 8 percent
-of replications at <code>c1 = 1</code> and the power-enhanced test in 16
-percent. The article’s values at its design (<code>n = 300</code>,
-<code>p = 500</code>, 1000 replications; its Figure 1 and the
-supplement’s table of designs) are the converged numbers a reported
-analysis deserves:</p>
-<table class="table">
-<colgroup>
-<col width="25%">
-<col width="25%">
-<col width="25%">
-<col width="25%">
-</colgroup>
-<thead><tr class="header">
-<th>Setting</th>
-<th><code>c1</code></th>
-<th>HDMM</th>
-<th>PE-HDMM</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>homogeneous</td>
-<td>0</td>
-<td>0.037</td>
-<td>0.051</td>
-</tr>
-<tr class="even">
-<td>homogeneous</td>
-<td>0.5</td>
-<td>0.690</td>
-<td>0.940</td>
-</tr>
-<tr class="odd">
-<td>contrasting</td>
-<td>0</td>
-<td>0.036</td>
-<td>0.044</td>
-</tr>
-<tr class="even">
-<td>contrasting</td>
-<td>0.5</td>
-<td>0.087</td>
-<td>0.331</td>
-</tr>
-<tr class="odd">
-<td>contrasting</td>
-<td>1</td>
-<td>about 0.15 (read from Figure 1)</td>
-<td>about 0.76 (read from Figure 1)</td>
-</tr>
-</tbody>
-</table>
-<p>The default tuning grid, the article’s grid rescaled to the design
-(see <code><a href="../reference/pe_lambda_grid.html">?pe_lambda_grid</a></code>), reproduces these within Monte Carlo
-error: 500 replications during the package’s release audit gave 0.048
-and 0.062, 0.666 and 0.940, 0.036 and 0.048, and 0.096 and 0.326 for the
-first four rows. One feature of the article’s figure is worth noticing:
-under the contrasting setting the benchmark’s rate rises above its size
-at <code>c1 = 1</code>. The penalized fit sometimes keeps only one
-member of a cancelling pair, and the total indirect effect through the
-selected mediators is then not zero. That is a property of the grid as
-much as of the test.</p>
-<p>To reproduce the article’s figure at its actual resolution (including
-the negative half of the <code>c1</code> grid, which the symmetric
-design fills in), run:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code><a href="../reference/pe_power_curve.html">pe_power_curve()</a></code>. The article’s Figure 3 sweeps
+<code>c1</code> from -1 to 1 (the symmetric design fills in the negative
+half), one panel per pattern:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">c1_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
-<span><span class="va">lm_homo_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                               pattern <span class="op">=</span> <span class="st">"homogeneous"</span>, c1_grid <span class="op">=</span> <span class="va">c1_grid</span>,</span>
-<span>                               c2 <span class="op">=</span> <span class="fl">0.5</span>, n_rep <span class="op">=</span> <span class="fl">1000</span>, cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
-<span><span class="va">lm_cont_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                               pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1_grid <span class="op">=</span> <span class="va">c1_grid</span>,</span>
-<span>                               c2 <span class="op">=</span> <span class="fl">0.5</span>, n_rep <span class="op">=</span> <span class="fl">1000</span>, cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="../reference/pe_simulation_study.html">pe_simulation_study()</a></code> is a convenience wrapper that runs
-several patterns at once and stacks the results, which is how the
-article’s figure panels are produced:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">study</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_simulation_study.html">pe_simulation_study</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                             patterns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"homogeneous"</span>, <span class="st">"contrasting"</span><span class="op">)</span>,</span>
-<span>                             c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, n_rep <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">lm_study</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_simulation_study.html">pe_simulation_study</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
+<span>                                patterns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"homogeneous"</span>, <span class="st">"contrasting"</span><span class="op">)</span>,</span>
+<span>                                c1_grid <span class="op">=</span> <span class="va">c1_grid</span>, c2 <span class="op">=</span> <span class="fl">0.5</span>, n_rep <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                                lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.39</span>, length.out <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
+<span>                                cores <span class="op">=</span> <span class="fl">4</span>, seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span></span></code></pre></div>
+<p>The result has one row per pattern and <code>c1</code>, with the two
+rejection rates and the number of replications whose penalized fit
+selected no mediator (<code>n_empty</code>). <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a
+<code><a href="../reference/pe_power_curve.html">pe_power_curve()</a></code> result draws the two curves against
+<code>c1</code>, as the guided-tour vignette shows.</p>
 <div class="section level4">
-<h4 id="the-real-data-motivated-heterogeneous-setting-supplement">The Real-Data-Motivated Heterogeneous Setting (Supplement)<a class="anchor" aria-label="anchor" href="#the-real-data-motivated-heterogeneous-setting-supplement"></a>
+<h4 id="the-real-data-motivated-heterogeneous-setting-supplement-section-s-4-4">The Real-Data-Motivated Heterogeneous Setting (Supplement Section
+S.4.4)<a class="anchor" aria-label="anchor" href="#the-real-data-motivated-heterogeneous-setting-supplement-section-s-4-4"></a>
 </h4>
-<p>The supplement adds a third, harder pattern: a setting calibrated to
-the DNA-methylation case study of Guo et al. (2022), with <strong>eleven
-active mediators of mixed sign</strong> that neither all agree
-(homogeneous) nor exactly cancel (contrasting).
+<p>The supplement adds a third, harder pattern in its Section S.4.4: a
+setting calibrated to the DNA-methylation case study of Guo et al.
+(2022), with <strong>eleven active mediators of mixed sign</strong> that
+neither all agree (homogeneous) nor exactly cancel (contrasting).
 <code><a href="../reference/simulate_guo_mediation.html">simulate_guo_mediation()</a></code> generates it from the calibration
-constants shipped as [<code>guo_calibration</code>]; the total indirect
+constants shipped as <code>guo_calibration</code>; the total indirect
 effect is <code>guo_calibration$beta_per_c1 * c1</code>, about
 <code>-1.597 * c1</code>. (The article reports <code>-1.5977</code>,
 computed from the full-precision Guo coefficients; the package ships
 those coefficients rounded to the three decimals printed in the
 supplement, which give <code>-1.597</code>.)</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_guo_mediation.html">simulate_guo_mediation</a></span><span class="op">(</span>c1 <span class="op">=</span> <span class="fl">1</span>, seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">M</span><span class="op">)</span>                              <span class="co"># 85 x 1008, the case-study dimensions</span></span>
 <span><span class="co">#&gt; [1]   85 1008</span></span>
@@ -278,38 +194,25 @@ supplement, which give <code>-1.597</code>.)</p>
 <span><span class="co">#&gt;  [1]  1  2  3  4  5  6  7  8  9 10 11</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">beta</span>, <span class="fl">4</span><span class="op">)</span>                      <span class="co"># beta_per_c1 * c1, i.e. about -1.597</span></span>
 <span><span class="co">#&gt; [1] -1.597</span></span></code></pre></div>
-<p>The fit below uses a wide grid, 50 values from 0.1 to 10, as the
-guided tour does for this setting. With it both tests reject at
-<code>n = 150</code>, and the power-enhanced screen recovers several of
-the mixed-sign loci:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dn</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_guo_mediation.html">simulate_guo_mediation</a></span><span class="op">(</span>c1 <span class="op">=</span> <span class="fl">1</span>, n <span class="op">=</span> <span class="fl">150</span>, seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">dn</span><span class="op">$</span><span class="va">X</span>, <span class="va">dn</span><span class="op">$</span><span class="va">Y</span>, <span class="va">dn</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                    lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">10</span>, length.out <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">fit</span><span class="op">[</span><span class="va">fit</span><span class="op">$</span><span class="va">term</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pval_hdmm"</span>, <span class="st">"pval_pe"</span>, <span class="st">"n_active_mediators"</span><span class="op">)</span>, <span class="op">]</span></span>
-<span><span class="co">#&gt;  term               value   </span></span>
-<span><span class="co">#&gt;  pval_hdmm          &lt; 0.0001</span></span>
-<span><span class="co">#&gt;  pval_pe            &lt; 0.0001</span></span>
-<span><span class="co">#&gt;  n_active_mediators 6       </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Outcome model: continuous (linear)</span></span>
-<span><span class="co">#&gt; Active mediators identified (6): 1, 4, 5, 6, 9, 10</span></span>
-<span><span class="co">#&gt; Tuning parameter (HBIC): lambda = 0.1 from 50 values in [0.1, 10] (the grid's lower end)</span></span></code></pre></div>
-<p>The article’s figure sweeps <code>c1</code> over
+<p>The supplement’s Figure S.14 sweeps <code>c1</code> over
 <code>c(0, +/- 0.1, ..., +/- 1)</code> at the case-study size
-<code>n = 85</code>, with and without the calibrated confounders,
-averaged over 1,000 replications:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code>n = 85</code>, without the calibrated confounders in its panel (a)
+and with them in its panel (b), averaged over 1,000 replications. The
+article records no tuning grid for this setting, so the fits below use
+the package default (the example on <code><a href="../reference/simulate_guo_mediation.html">?simulate_guo_mediation</a></code>
+passes a shorter grid to stay fast and selects the same loci as the
+default):</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rej</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">c1</span>, <span class="va">confounders</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="op">{</span></span>
 <span>    <span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_guo_mediation.html">simulate_guo_mediation</a></span><span class="op">(</span>c1 <span class="op">=</span> <span class="va">c1</span>, confounders <span class="op">=</span> <span class="va">confounders</span><span class="op">)</span></span>
-<span>    <span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, Z <span class="op">=</span> <span class="va">d</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                      lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">10</span>, length.out <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, Z <span class="op">=</span> <span class="va">d</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">f</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">f</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_hdmm"</span><span class="op">]</span>, <span class="va">f</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">f</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_pe"</span><span class="op">]</span><span class="op">)</span></span>
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">ps</span> <span class="op">&lt;=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, <span class="va">rej</span>, confounders <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">guo_without</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, <span class="va">rej</span>, confounders <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">guo_with</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, <span class="va">rej</span>, confounders <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -321,49 +224,25 @@ a link function: a <strong>logistic</strong> model for binary outcomes
 Again <code>n = 300</code>, <code>p = 500</code>, with a homogeneous and
 a contrasting pattern apiece; the article fixes the direct effect at
 <code>c2 = 1</code> for the logistic models and <code>c2 = 0.4</code>
-for the Poisson models.</p>
-<p>Here is the dramatic <strong>contrasting</strong> case for each
-outcome type (the panel where PE most clearly rescues power), at reduced
-size:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span>
-<span><span class="va">logit_cont</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">180</span>, p <span class="op">=</span> <span class="fl">50</span>, outcome <span class="op">=</span> <span class="st">"binary"</span>,</span>
-<span>                             pattern <span class="op">=</span> <span class="st">"contrasting"</span>,</span>
-<span>                             c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                             c2 <span class="op">=</span> <span class="fl">1</span>, n_rep <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
-<span><span class="va">pois_cont</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">180</span>, p <span class="op">=</span> <span class="fl">50</span>, outcome <span class="op">=</span> <span class="st">"count"</span>,</span>
-<span>                            pattern <span class="op">=</span> <span class="st">"contrasting"</span>,</span>
-<span>                            c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                            c2 <span class="op">=</span> <span class="fl">0.4</span>, n_rep <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu">plot_rejection</span><span class="op">(</span><span class="va">logit_cont</span>, <span class="st">"Logistic, contrasting"</span><span class="op">)</span></span>
-<span><span class="fu">plot_rejection</span><span class="op">(</span><span class="va">pois_cont</span>, <span class="st">"Poisson, contrasting"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reproducing-the-article_files/figure-html/glm-curves-1.png" class="r-plt" alt="Reduced reproduction of the article's logistic and Poisson rejection-rate figures under the contrasting setting" width="672"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
-<p>As in the article, the benchmark HDGMM has little power against
-contrasting effects while PE-HDGMM gains substantial power, all while
-holding the size at <code>c1 = 0</code> (20 replications here, so each
-rate carries a Monte Carlo standard error of up to 0.11). The article’s
-contrasting rows at <code>n = 300</code>, <code>p = 500</code>, and
-<code>c1 = 0.5</code> (logistic) or <code>0.4</code> (Poisson) are:
-logistic, size 0.035 and 0.044, power 0.065 and 0.243; Poisson, size
-0.028 and 0.046, power 0.082 and 0.915 (HDGMM then PE-HDGMM). For binary
-and count outcomes the default grid is the review-era grid, under which
-the release audit reproduced the Poisson row (0.060 and 0.905) and the
-logistic row within Monte Carlo error. The full article designs,
-including the homogeneous panels:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+for the Poisson models. The calls below run the four panels of the
+article’s Figures 4 and 5. The Poisson homogeneous fits take tens of
+seconds each at this design, so that panel alone needs well over 100
+hours of computing (days, even on 4 cores); each of the other three
+panels needs a few hours.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">c1_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="co"># Logistic: c2 = 1</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">pat</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"homogeneous"</span>, <span class="st">"contrasting"</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"binary"</span>, pattern <span class="op">=</span> <span class="va">pat</span>,</span>
-<span>                 c1_grid <span class="op">=</span> <span class="va">c1_grid</span>, c2 <span class="op">=</span> <span class="fl">1</span>, n_rep <span class="op">=</span> <span class="fl">1000</span>, cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="va">glm_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_simulation_study.html">pe_simulation_study</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>                                 patterns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"homogeneous"</span>, <span class="st">"contrasting"</span><span class="op">)</span>,</span>
+<span>                                 c1_grid <span class="op">=</span> <span class="va">c1_grid</span>, c2 <span class="op">=</span> <span class="fl">1</span>, n_rep <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                                 lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.04</span>, <span class="fl">0.2</span>, length.out <span class="op">=</span> <span class="fl">15</span><span class="op">)</span>,</span>
+<span>                                 cores <span class="op">=</span> <span class="fl">4</span>, seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span></span>
 <span><span class="co"># Poisson: c2 = 0.4</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">pat</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"homogeneous"</span>, <span class="st">"contrasting"</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"count"</span>, pattern <span class="op">=</span> <span class="va">pat</span>,</span>
-<span>                 c1_grid <span class="op">=</span> <span class="va">c1_grid</span>, c2 <span class="op">=</span> <span class="fl">0.4</span>, n_rep <span class="op">=</span> <span class="fl">1000</span>, cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">glm_pois</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_simulation_study.html">pe_simulation_study</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"count"</span>,</span>
+<span>                                patterns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"homogeneous"</span>, <span class="st">"contrasting"</span><span class="op">)</span>,</span>
+<span>                                c1_grid <span class="op">=</span> <span class="va">c1_grid</span>, c2 <span class="op">=</span> <span class="fl">0.4</span>, n_rep <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                                lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">5</span>, length.out <span class="op">=</span> <span class="fl">15</span><span class="op">)</span>,</span>
+<span>                                cores <span class="op">=</span> <span class="fl">4</span>, seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="supplement-section-s-4-1-identifying-individual-mediators-fwer-and-fdr">Supplement Section S.4.1: Identifying Individual Mediators (FWER and
@@ -376,75 +255,29 @@ false discovery rate (FDR). POEMED exposes this through the
 <code>method</code> argument (<code>"Bonferroni"</code> for FWER,
 <code>"BH"</code> or <code>"BY"</code> for FDR) and the
 <code>report_all_methods</code> switch, which reports all three side by
-side as the supplement does.</p>
-<p>For a <em>single</em> fit, <code><a href="../reference/pe_selection.html">pe_selection()</a></code> reports the
-active set under each method side by side, together with the
-power-enhanced statistic and p-value each one produces (the screened set
-feeds <code>J_m</code>, so the methods can give different global
-p-values, exactly the PE / PE_BH / PE_BY columns of the article’s
-extended tables):</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span>
-<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mediation_data.html">simulate_mediation_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, p <span class="op">=</span> <span class="fl">60</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                             pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1 <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">d</span><span class="op">$</span><span class="va">active_mediators</span>                                  <span class="co"># ground truth</span></span>
-<span><span class="co">#&gt; [1] 1 2 3 4</span></span>
-<span></span>
-<span><span class="va">fit_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                        report_all_methods <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/pe_selection.html">pe_selection</a></span><span class="op">(</span><span class="va">fit_all</span><span class="op">)</span>                               <span class="co"># per-method sets + p-values</span></span>
-<span><span class="co">#&gt;  method     n_active j_pe  stat_pe pval_pe  active_mediators</span></span>
-<span><span class="co">#&gt;  Bonferroni 1        174.1 174.2   &lt; 0.0001 2               </span></span>
-<span><span class="co">#&gt;  BH         1        174.1 174.2   &lt; 0.0001 2               </span></span>
-<span><span class="co">#&gt;  BY         1        174.1 174.2   &lt; 0.0001 2</span></span></code></pre></div>
-<p>To reproduce the supplement’s identification <em>study</em> (its
-empirical FWER, FDR, precision, and recall over many replications),
-<code><a href="../reference/pe_identification_study.html">pe_identification_study()</a></code> scores each method’s selections
-against the truth set across a grid of <code>c1</code>, with the
-supplement’s definitions: a mediator counts as truly active when its
-outcome coefficient is nonzero, so at <code>c1 = 0</code> the five such
-mediators are the truth set, <code>fwer</code> is the probability of
-selecting a mediator outside it, and <code>recall</code> is the share of
-the five that were selected (pass <code>truth = "mediation"</code> for
-the both-paths definition, under which nothing is active at
-<code>c1 = 0</code> and <code>recall</code> is <code>NA</code>
-there):</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span>
-<span><span class="va">id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_identification_study.html">pe_identification_study</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>, p <span class="op">=</span> <span class="fl">60</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                              pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                              n_rep <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
-<span><span class="va">id</span></span>
-<span><span class="co">#&gt;  c1  method     fwer fdr precision recall  n_valid n_empty</span></span>
-<span><span class="co">#&gt;  0   Bonferroni 0    0   0         0       30      0      </span></span>
-<span><span class="co">#&gt;  0   BH         0    0   0         0       30      0      </span></span>
-<span><span class="co">#&gt;  0   BY         0    0   0         0       30      0      </span></span>
-<span><span class="co">#&gt;  0.5 Bonferroni 0    0   0.2       0.05    30      0      </span></span>
-<span><span class="co">#&gt;  0.5 BH         0    0   0.2       0.05    30      0      </span></span>
-<span><span class="co">#&gt;  0.5 BY         0    0   0.1667    0.04167 30      0      </span></span>
-<span><span class="co">#&gt;  1   Bonferroni 0    0   0.3333    0.09167 30      0      </span></span>
-<span><span class="co">#&gt;  1   BH         0    0   0.3333    0.1083  30      0      </span></span>
-<span><span class="co">#&gt;  1   BY         0    0   0.3       0.09167 30      0      </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Outcome: continuous</span></span></code></pre></div>
-<p>At this small design the Bonferroni screen names no false mediator in
-any of the 30 replications at any <code>c1</code>, and at
-<code>c1 = 1</code> its precision is 0.33 with recall 0.09 (30
-replications; standard error up to 0.09). The article’s summary,
-“close-to-zero empirical FWER and FDR, high precision, but medium-to-low
-recall,” describes its own design: at <code>n = 300</code>,
-<code>p = 500</code>, and <code>c1 = 0.6</code> the supplement’s table
-prints, for the contrasting setting, FWER 0.000, FDR 0.000, precision
-0.403, and recall 0.122, and for the homogeneous setting 0.000, 0.000,
-0.984, and 0.497. The default grid reproduces those within Monte Carlo
-error (500 replications during the release audit: 0.000, 0.000, 0.406,
-0.124 and 0.000, 0.000, 0.972, 0.482). The article-scale study raises
-<code>n</code>, <code>p</code>, and <code>n_rep</code> to 300 / 500 /
-1000:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pe_identification_study.html">pe_identification_study</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                        pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>,</span>
-<span>                        n_rep <span class="op">=</span> <span class="fl">1000</span>, cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+side as the supplement does; for a single fit,
+<code><a href="../reference/pe_selection.html">pe_selection()</a></code> shows the selected set and the
+power-enhanced p-value under each method (the guided-tour vignette shows
+one).</p>
+<p><code><a href="../reference/pe_identification_study.html">pe_identification_study()</a></code> runs the supplement’s
+identification <em>study</em>: it scores each method’s selections
+against the truth set across a grid of <code>c1</code> and reports the
+empirical FWER, FDR, precision, and recall, with the supplement’s
+definitions. A mediator counts as truly active when its outcome
+coefficient is nonzero, at every <code>c1</code> including
+<code>c1 = 0</code> (five mediators under the homogeneous pattern, four
+under the contrasting pattern); pass <code>truth = "mediation"</code>
+for the both-paths definition, under which nothing is active at
+<code>c1 = 0</code> and <code>recall</code> is <code>NA</code> there.
+The supplement’s Tables S.1 to S.3 come from the calls below, one per
+pattern:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">id_study</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"homogeneous"</span>, <span class="st">"contrasting"</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pattern</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/pe_identification_study.html">pe_identification_study</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, p <span class="op">=</span> <span class="fl">500</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
+<span>                          pattern <span class="op">=</span> <span class="va">pattern</span>, c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>,</span>
+<span>                          n_rep <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                          lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.39</span>, length.out <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
+<span>                          cores <span class="op">=</span> <span class="fl">4</span>, seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -470,7 +303,7 @@ infant mortality (<code>imr</code>), under-five mortality
 </ul>
 <p>with WHO region and World Bank income group available as the grouping
 and confounding variables.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">WHO_health_mediation</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">WHO_health_mediation</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 2002   68</span></span>
@@ -481,172 +314,303 @@ and confounding variables.</p>
 <div class="section level3">
 <h3 id="section-5-table-1-infant-mortality-imr">Section 5, Table 1: Infant Mortality (IMR)<a class="anchor" aria-label="anchor" href="#section-5-table-1-infant-mortality-imr"></a>
 </h3>
-<p><code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> reproduces the article’s
-per-outcome table: it fits the global model (region, income, and year as
-confounders), then a separate model within each WHO region (income and
-year as confounders) and each income group (region and year as
-confounders), and reports the HDMM and PE p-values for the total
-indirect effect together with the active mediators the PE component
-identifies.</p>
-<p>The function uses the two tuning grids of Yu and Kelley (in press): a
-narrower <code>lambda_grid_global = seq(0.1, 5, length.out = 100)</code>
-for the global all-country model and a wider
-<code>lambda_grid = seq(0.1, 10, length.out = 100)</code> for every
-subgroup model. Both grids are the defaults, so no explicit arguments
-are needed to reproduce the article exactly.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<p><code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> builds a table in the layout of
+the article’s per-outcome tables: it fits the global model (region,
+income, and year as confounders), then a separate model within each WHO
+region (income and year as confounders) and each income group (region
+and year as confounders), and reports the HDMM and PE p-values for the
+total indirect effect together with the mediators the PE component
+selects.</p>
+<p>The function searches one tuning grid,
+<code>seq(0.1, 2, length.out = 100)</code>, for the global all-country
+model and for every subgroup model alike. It is the grid behind the
+article’s real-data tables (the article’s text gives no grid; it states
+only that the tuning parameter is chosen by the HBIC criterion), and it
+is the default of both <code>lambda_grid</code>, for the subgroup
+models, and <code>lambda_grid_global</code>, for the global model, so no
+explicit grid arguments are needed.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">imr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis</a></span><span class="op">(</span><span class="st">"imr"</span>, groupings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"global"</span>, <span class="st">"region"</span>, <span class="st">"income"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">imr</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"n_countries"</span>, <span class="st">"pval_hdmm"</span>, <span class="st">"pval_pe"</span>, <span class="st">"active_mediators"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;  group        n_countries pval_hdmm pval_pe  active_mediators </span></span>
-<span><span class="co">#&gt;  ALL          91          0.0409    &lt; 0.0001 gge_gdp          </span></span>
-<span><span class="co">#&gt;  AFR          32          0.4672    0.4672   none             </span></span>
-<span><span class="co">#&gt;  AMR          28          0.4129    0.4129   none             </span></span>
-<span><span class="co">#&gt;  EMR          8           0.0304    0.0304   none             </span></span>
-<span><span class="co">#&gt;  EUR          9           0.0035    &lt; 0.0001 gge_gdp          </span></span>
-<span><span class="co">#&gt;  SEAR         5           0.3087    &lt; 0.0001 ext_usd2021_pc   </span></span>
-<span><span class="co">#&gt;  WPR          9           0.8721    &lt; 0.0001 chi_che, pvtd_gdp</span></span>
-<span><span class="co">#&gt;  Low          16          0.3157    &lt; 0.0001 pvtd_usd2021     </span></span>
-<span><span class="co">#&gt;  Lower-middle 27          0.9546    0.9546   none             </span></span>
-<span><span class="co">#&gt;  Upper-middle 26          0.4945    0.4945   none             </span></span>
-<span><span class="co">#&gt;  High         22          0.0238    &lt; 0.0001 oops_che, shi_che</span></span></code></pre></div>
-<p>Read this against the article’s IMR table. The headline
-reproductions:</p>
+<span><span class="va">imr</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"n_countries"</span>, <span class="st">"pval_hdmm"</span>, <span class="st">"pval_pe"</span>, <span class="st">"selected_mediators"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;  group        n_countries pval_hdmm pval_pe  selected_mediators</span></span>
+<span><span class="co">#&gt;  ALL          91          0.0644    &lt; 0.0001 gge_gdp           </span></span>
+<span><span class="co">#&gt;  AFR          32          0.4434    0.4434   none              </span></span>
+<span><span class="co">#&gt;  AMR          28          0.4972    0.4972   none              </span></span>
+<span><span class="co">#&gt;  EMR          8           0.0261    0.0261   none              </span></span>
+<span><span class="co">#&gt;  EUR          9           &lt; 0.0001  &lt; 0.0001 none              </span></span>
+<span><span class="co">#&gt;  SEAR         5           0.6483    &lt; 0.0001 ext_usd2021_pc    </span></span>
+<span><span class="co">#&gt;  WPR          9           0.8681    &lt; 0.0001 chi_che           </span></span>
+<span><span class="co">#&gt;  Low          16          0.3091    &lt; 0.0001 pvtd_usd2021      </span></span>
+<span><span class="co">#&gt;  Lower-middle 27          0.9543    0.9543   none              </span></span>
+<span><span class="co">#&gt;  Upper-middle 26          0.4481    0.4481   none              </span></span>
+<span><span class="co">#&gt;  High         22          0.0389    &lt; 0.0001 oops_che, shi_che </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Outcome: imr</span></span></code></pre></div>
+<p>Read this against the article’s Table 1. The highlights:</p>
 <ul>
 <li>
 <strong>Global (ALL):</strong> general government expenditure as a
-share of GDP (<code>gge_gdp</code>) is the active mediator; HDMM is
-borderline (<code>pval_hdmm</code> = 0.041) while PE is essentially
-zero.</li>
+share of GDP (<code>gge_gdp</code>) is the mediator the screen selects;
+HDMM is borderline (<code>pval_hdmm</code> = 0.064) while PE is
+essentially zero.</li>
 <li>
 <strong>SEAR (South-East Asia):</strong> HDMM sees nothing
-(<code>pval_hdmm</code> = 0.31) yet PE rejects decisively, naming
-external health expenditure per capita (<code>ext_usd2021_pc</code>).
-This is a textbook heterogeneous-mediation rescue.</li>
+(<code>pval_hdmm</code> = 0.65) while PE detects external health
+expenditure per capita in constant 2021 US dollars
+(<code>ext_usd2021_pc</code>).</li>
 <li>
-<strong>WPR (Western Pacific):</strong> HDMM is near 1
+<strong>WPR (Western Pacific):</strong> HDMM sees nothing
 (<code>pval_hdmm</code> = 0.87) while PE detects compulsory health
-insurance and private expenditure (<code>chi_che</code>,
-<code>pvtd_gdp</code>).</li>
+insurance as a share of current health expenditure
+(<code>chi_che</code>).</li>
 <li>
-<strong>EUR (Europe):</strong> both tests reject; PE identifies
-general government expenditure as a share of GDP
-(<code>gge_gdp</code>).</li>
+<strong>Low income:</strong> HDMM sees nothing
+(<code>pval_hdmm</code> = 0.31) while PE detects domestic private health
+expenditure (<code>pvtd_usd2021</code>).</li>
 <li>
-<strong>AFR, AMR:</strong> no active mediation, by either test.</li>
+<strong>EMR (Eastern Mediterranean), EUR (Europe), and high
+income:</strong> the benchmark rejects (<code>pval_hdmm</code> = 0.026,
+0.000094, and 0.039; Table 1 prints the EUR value as 0.0001). In the
+high-income group PE identifies out-of-pocket spending and social health
+insurance as shares of current health expenditure
+(<code>oops_che</code>, <code>shi_che</code>); in EMR and EUR no single
+indicator passes the screen, so the PE p-value equals the
+benchmark’s.</li>
+<li>
+<strong>AFR, AMR, lower-middle income, and upper-middle
+income:</strong> neither test detects mediation.</li>
 </ul>
-<p>These are precisely the cases the article highlights, where
-contrasting or heterogeneous mediation hides the signal from the
-conventional test and the PE component recovers it.</p>
-<p>The income-group rows are returned in the same call; the strongest
-signals appear in the low- and high-income groups, matching the
-article.</p>
+<p>In the global model, SEAR, WPR, and the low-income group,
+heterogeneous mediation hides the signal from the conventional test and
+the PE component recovers it. Among the income groups the strongest
+signals appear in the low- and high-income groups, as Yu and Kelley (in
+press) report in Table 1.</p>
+<p>The table above agrees with the article’s Table 1 row for row. Every
+group’s identified set is the one the table lists, and every benchmark
+p-value matches the printed value to four decimals except SEAR, which is
+0.6483 here where the table prints 0.6482. Where the table prints a PE
+p-value below <code>1e-12</code>, the package prints
+<code>&lt; 0.0001</code>, its display floor; the values behind those
+entries are below <code>1e-12</code> as well.</p>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> digests the whole table, highlighting the
 groups where the power-enhanced test detects mediation the benchmark
-misses (the rows the article prints in bold):</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+misses (the article’s Table 1 sets those four rows in bold):</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">imr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; POEMED comparison: IMR</span></span>
 <span><span class="co">#&gt;   groups: 11 (11 with data), alpha_level = 0.05</span></span>
-<span><span class="co">#&gt;   detected by benchmark (HDMM): 4   by power-enhanced (PE): 7</span></span>
-<span><span class="co">#&gt;   PE detects mediation in 3 groups the benchmark misses:</span></span>
-<span><span class="co">#&gt;  group n_countries pval_hdmm  pval_pe  active_mediators</span></span>
-<span><span class="co">#&gt;   SEAR           5     0.309 4.13e-41    ext_usd2021_pc</span></span>
-<span><span class="co">#&gt;    WPR           9     0.872 3.77e-83 chi_che, pvtd_gdp</span></span>
-<span><span class="co">#&gt;    Low          16     0.316 2.10e-62      pvtd_usd2021</span></span>
+<span><span class="co">#&gt;   detected by benchmark (HDMM): 3   by power-enhanced (PE): 7</span></span>
+<span><span class="co">#&gt;   PE detects mediation in 4 groups the benchmark misses:</span></span>
+<span><span class="co">#&gt;  group n_countries pval_hdmm  pval_pe selected_mediators</span></span>
+<span><span class="co">#&gt;    ALL          91    0.0644 &lt; 0.0001            gge_gdp</span></span>
+<span><span class="co">#&gt;   SEAR           5    0.6483 &lt; 0.0001     ext_usd2021_pc</span></span>
+<span><span class="co">#&gt;    WPR           9    0.8681 &lt; 0.0001            chi_che</span></span>
+<span><span class="co">#&gt;    Low          16    0.3091 &lt; 0.0001       pvtd_usd2021</span></span>
 <span><span class="co">#&gt;   most-flagged mediators:</span></span>
-<span><span class="co">#&gt;     gge_gdp            2</span></span>
 <span><span class="co">#&gt;     chi_che            1</span></span>
 <span><span class="co">#&gt;     ext_usd2021_pc     1</span></span>
+<span><span class="co">#&gt;     gge_gdp            1</span></span>
 <span><span class="co">#&gt;     oops_che           1</span></span>
-<span><span class="co">#&gt;     pvtd_gdp           1</span></span>
 <span><span class="co">#&gt;     pvtd_usd2021       1</span></span>
 <span><span class="co">#&gt;     shi_che            1</span></span></code></pre></div>
 <p>The supplement also gives an <strong>extended</strong> version of
-each table that breaks the power-enhanced result out by multiplicity
-method. Pass <code>full_table = TRUE</code> to get that layout, with the
-PE p-value and active mediators reported separately under Bonferroni
-(FWER), BH, and BY (FDR):</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+each table (its Table S.8 for IMR) that breaks the power-enhanced result
+out by multiplicity method. Pass <code>full_table = TRUE</code> to get
+that layout, with the PE p-value and selected mediators reported
+separately under Bonferroni (FWER), BH, and BY (FDR):</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis</a></span><span class="op">(</span><span class="st">"imr"</span>, groupings <span class="op">=</span> <span class="st">"global"</span>, full_table <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  grouping group n_countries pval_hdmm pval_pe_bonferroni active_bonferroni</span></span>
-<span><span class="co">#&gt;  global   ALL   91          0.0409    &lt; 0.0001           gge_gdp          </span></span>
-<span><span class="co">#&gt;  pval_pe_bh active_bh        pval_pe_by active_by</span></span>
-<span><span class="co">#&gt;  &lt; 0.0001   chi_che, gge_gdp &lt; 0.0001   gge_gdp  </span></span>
+<span><span class="co">#&gt;  grouping group n_countries pval_hdmm pval_pe_bonferroni selected_bonferroni</span></span>
+<span><span class="co">#&gt;  global   ALL   91          0.0644    &lt; 0.0001           gge_gdp            </span></span>
+<span><span class="co">#&gt;  pval_pe_bh selected_bh      pval_pe_by selected_by</span></span>
+<span><span class="co">#&gt;  &lt; 0.0001   chi_che, gge_gdp &lt; 0.0001   gge_gdp    </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Outcome: imr</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="the-other-outcomes-and-the-region-by-income-cells">The Other Outcomes, and the Region-by-Income Cells<a class="anchor" aria-label="anchor" href="#the-other-outcomes-and-the-region-by-income-cells"></a>
 </h3>
-<p>The remaining article outcomes (under-five mortality, life
-expectancy, low birthweight, and undernourishment) run identically; only
-the outcome code changes:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<p>The remaining article outcomes (undernourishment in the article’s
+Table 2, and life expectancy, under-five mortality, and low birthweight
+in the supplement’s Tables S.10 to S.12) run identically; only the
+outcome code changes:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">for</span> <span class="op">(</span><span class="va">y</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"u5mr"</span>, <span class="st">"leb"</span>, <span class="st">"lbw"</span>, <span class="st">"pou"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis</a></span><span class="op">(</span><span class="va">y</span>, groupings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"global"</span>, <span class="st">"region"</span>, <span class="st">"income"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The article also drills into the <strong>region-by-income</strong>
-cells (for example, AFR-Low or WPR-High). Build any one cell with
+cells. <code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> returns the
+region-by-income block of the table in one call, with <code>NA</code>
+for the cells that have no countries or whose fit fails:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">imr_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis</a></span><span class="op">(</span><span class="st">"imr"</span>, groupings <span class="op">=</span> <span class="st">"region_income"</span><span class="op">)</span></span></code></pre></div>
+<p>To look inside one cell, build it with
 <code><a href="../reference/WHO_mediation_design.html">WHO_mediation_design()</a></code>, which assembles the exposure,
-outcome, mediator, and confounder blocks for a chosen subset, then call
-<code><a href="../reference/pe_mediation.html">pe_mediation()</a></code>. A small cell can contain indicators that
-never vary inside it; passing <code>drop_constant = TRUE</code> drops
-those zero-variance columns with a warning and keeps the reported active
-set numbered against the original mediators
-(<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> does the same internally):</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+outcome, mediator, and confounder blocks for a chosen subset, and fit it
+the way <code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> does. A small cell can
+contain indicators that never vary inside it. Such a column carries no
+signal and cannot be standardized, so the code below drops it by hand
+before standardizing, as the function does, and the print footer then
+names the selected mediators by their indicator codes. The code also
+passes the function’s default grid, so this fit is the AFR-Upper-middle
+row of the block above:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_design.html">WHO_mediation_design</a></span><span class="op">(</span><span class="st">"imr"</span>, region <span class="op">=</span> <span class="st">"AFR"</span>, income <span class="op">=</span> <span class="st">"Upper-middle"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>n_countries<span class="op">=</span> <span class="va">cell</span><span class="op">$</span><span class="va">n_countries</span>, mediators <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>n_countries <span class="op">=</span> <span class="va">cell</span><span class="op">$</span><span class="va">n_countries</span>, mediators <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; n_countries   mediators </span></span>
 <span><span class="co">#&gt;           4          57</span></span>
 <span></span>
-<span><span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span>, <span class="fl">2L</span>, <span class="va">sd</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>, <span class="va">cell</span><span class="op">$</span><span class="va">Y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">Y</span><span class="op">)</span>,</span>
-<span>               <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span><span class="op">[</span>, <span class="va">keep</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>               Z <span class="op">=</span> <span class="va">cell</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>, scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>               lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">5</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span> <span class="st">"singular covariance (cell too small)"</span> <span class="kw">else</span></span>
-<span>  <span class="va">cell</span><span class="op">$</span><span class="va">indicators</span><span class="op">[</span><span class="va">keep</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"active_mediators"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; [1] "pvtd_ncu2021_pc"</span></span></code></pre></div>
+<span><span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span>, <span class="fl">2L</span>, <span class="va">sd</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>          <span class="co"># FALSE for a constant indicator</span></span>
+<span><span class="va">cell</span><span class="op">$</span><span class="va">indicators</span><span class="op">[</span><span class="op">!</span><span class="va">keep</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] "chi_pvt_che"</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>, <span class="va">cell</span><span class="op">$</span><span class="va">Y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">Y</span><span class="op">)</span>,</span>
+<span>                    <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span><span class="op">[</span>, <span class="va">keep</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>                    Z <span class="op">=</span> <span class="va">cell</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>, scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                    lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit</span><span class="op">[</span><span class="va">fit</span><span class="op">$</span><span class="va">term</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pval_hdmm"</span>, <span class="st">"pval_pe"</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt;  term      value   </span></span>
+<span><span class="co">#&gt;  pval_hdmm 0.0148  </span></span>
+<span><span class="co">#&gt;  pval_pe   &lt; 0.0001</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Outcome model: continuous (linear)</span></span>
+<span><span class="co">#&gt; Selected mediators (1): pvtd_ncu2021_pc</span></span>
+<span><span class="co">#&gt; Tuning parameter (HBIC): lambda = 0.138 from 100 values in [0.1, 2]</span></span></code></pre></div>
+<p>The selected mediator, domestic private health expenditure per capita
+in constant 2021 national currency units (<code>pvtd_ncu2021_pc</code>),
+is the one the article’s Table 1 lists for this cell, and the benchmark
+p-value, 0.0148, is the value the table prints.</p>
+</div>
+<div class="section level3">
+<h3 id="six-cells-reported-as-na">Six Cells Reported as NA<a class="anchor" aria-label="anchor" href="#six-cells-reported-as-na"></a>
+</h3>
+<p>Across the region-by-income blocks of the article’s tables for its
+five outcomes (Table 1, Table 2, and Tables S.8 to S.12), six cells that
+the article prints with a value come back from
+<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> as <code>NA</code>, each with a
+warning that names the cell and quotes the reason. They are of two
+kinds.</p>
+<p><strong>Four rank-deficient cells.</strong> In the EMR-Lower-middle
+cells of IMR and U5MR and the AFR-Upper-middle cells of LEB and U5MR,
+two of the 57 indicators are exactly collinear: domestic and external
+health expenditure as shares of current health expenditure
+(<code>dom_che</code>, <code>ext_che</code>) sum to 100 in every
+country-year of those cells. The AFR-Upper-middle cells add a second
+identity, since compulsory and social health insurance as shares of
+current health expenditure (<code>chi_che</code>, <code>shi_che</code>)
+coincide there (compulsory private insurance, <code>chi_pvt_che</code>,
+is zero throughout, which is why it was dropped as constant above). The
+benchmark test inverts the covariance matrix of the mediators the
+penalized fit selected, and when that selection keeps both members of a
+pair the matrix is singular; the fit stops with the error that the
+system is computationally singular, and the function reports the cell as
+<code>NA</code>. (The same two identities hold in the IMR cell above,
+where the selection keeps <code>ext_che</code> and <code>chi_che</code>
+without their partners, so the test goes through.) In three of the four
+hand fits below HBIC chooses 0.1, the smallest value of the article’s
+grid, for the full model, the reduced model, or both; the fits keep that
+grid as the article’s analysis did, so the warning a single
+<code><a href="../reference/pe_mediation.html">pe_mediation()</a></code> fit gives at an end of its grid is not shown
+in this section. The article’s values come back when the collinearity is
+removed before the fit, as the article’s analysis did: it dropped
+<code>dom_che</code> and <code>vfa_che</code> (near-exact partners of
+<code>ext_che</code> and <code>cfa_che</code>) in the EMR-Lower-middle
+cells, and <code>shi_che</code> and <code>ext_che</code> in the
+AFR-Upper-middle cells:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_design.html">WHO_mediation_design</a></span><span class="op">(</span><span class="st">"imr"</span>, region <span class="op">=</span> <span class="st">"EMR"</span>, income <span class="op">=</span> <span class="st">"Lower-middle"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span><span class="op">[</span>, <span class="st">"dom_che"</span><span class="op">]</span> <span class="op">+</span> <span class="va">cell</span><span class="op">$</span><span class="va">M</span><span class="op">[</span>, <span class="st">"ext_che"</span><span class="op">]</span><span class="op">)</span>   <span class="co"># 100 in every row</span></span>
+<span><span class="co">#&gt; [1] 100 100</span></span>
+<span></span>
+<span><span class="va">fit_cell</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">outcome</span>, <span class="va">region</span>, <span class="va">income</span>, <span class="va">drop</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">cell</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_design.html">WHO_mediation_design</a></span><span class="op">(</span><span class="va">outcome</span>, region <span class="op">=</span> <span class="va">region</span>, income <span class="op">=</span> <span class="va">income</span><span class="op">)</span></span>
+<span>  <span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span>, <span class="fl">2L</span>, <span class="va">sd</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="op">!</span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">indicators</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">drop</span><span class="op">)</span></span>
+<span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>, <span class="va">cell</span><span class="op">$</span><span class="va">Y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">Y</span><span class="op">)</span>,</span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">cell</span><span class="op">$</span><span class="va">M</span><span class="op">[</span>, <span class="va">keep</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>                      Z <span class="op">=</span> <span class="va">cell</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>, scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                      lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">selected</span> <span class="op">&lt;-</span> <span class="va">cell</span><span class="op">$</span><span class="va">indicators</span><span class="op">[</span><span class="va">keep</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"selected_mediators"</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>outcome <span class="op">=</span> <span class="va">outcome</span>, cell <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">region</span>, <span class="va">income</span>, sep <span class="op">=</span> <span class="st">"-"</span><span class="op">)</span>,</span>
+<span>             dropped <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">drop</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>,</span>
+<span>             pval_hdmm <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">fit</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_hdmm"</span><span class="op">]</span>,</span>
+<span>             selected <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">selected</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">selected</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span></span>
+<span>                        <span class="kw">else</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">rd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu">fit_cell</span><span class="op">(</span><span class="st">"imr"</span>,  <span class="st">"EMR"</span>, <span class="st">"Lower-middle"</span>,</span>
+<span>                     drop <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dom_che"</span>, <span class="st">"vfa_che"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>            <span class="fu">fit_cell</span><span class="op">(</span><span class="st">"u5mr"</span>, <span class="st">"EMR"</span>, <span class="st">"Lower-middle"</span>,</span>
+<span>                     drop <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dom_che"</span>, <span class="st">"vfa_che"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>            <span class="fu">fit_cell</span><span class="op">(</span><span class="st">"leb"</span>,  <span class="st">"AFR"</span>, <span class="st">"Upper-middle"</span>,</span>
+<span>                     drop <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shi_che"</span>, <span class="st">"ext_che"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>            <span class="fu">fit_cell</span><span class="op">(</span><span class="st">"u5mr"</span>, <span class="st">"AFR"</span>, <span class="st">"Upper-middle"</span>,</span>
+<span>                     drop <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shi_che"</span>, <span class="st">"ext_che"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rd</span></span>
+<span><span class="co">#&gt;   outcome             cell          dropped  pval_hdmm        selected</span></span>
+<span><span class="co">#&gt; 1     imr EMR-Lower-middle dom_che, vfa_che 0.08372121            none</span></span>
+<span><span class="co">#&gt; 2    u5mr EMR-Lower-middle dom_che, vfa_che 0.09144904            none</span></span>
+<span><span class="co">#&gt; 3     leb AFR-Upper-middle shi_che, ext_che 0.13114741            none</span></span>
+<span><span class="co">#&gt; 4    u5mr AFR-Upper-middle shi_che, ext_che 0.03894879 pvtd_ncu2021_pc</span></span></code></pre></div>
+<p>The four benchmark p-values, 0.0837, 0.0914, 0.1311, 0.0389, are the
+values the article prints for these cells (Table 1 for IMR, Table S.10
+for LEB, and Table S.11 for U5MR), and the U5MR AFR-Upper-middle cell
+recovers the mediator Table S.11 lists,
+<code>pvtd_ncu2021_pc</code>.</p>
+<p><strong>Two constant-outcome cells.</strong> In the EUR-High and
+WPR-High cells of the undernourishment analysis (PoU, the article’s
+Table 2), the outcome is 2.5 in every country-year of the cell: the
+World Bank publishes a prevalence of undernourishment below 2.5 percent
+as 2.5, its lower reporting bound, and the high-income countries of
+those two regions are all at that bound. There is no variation in the
+outcome to mediate, so <code><a href="../reference/pe_mediation.html">pe_mediation()</a></code> refuses the fit with
+the message that <code>Y</code> is constant, and the function reports
+the two cells as <code>NA</code>. Table 2 prints a p-value of 1 for
+both.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"EUR"</span>, <span class="st">"WPR"</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="../reference/WHO_mediation_design.html">WHO_mediation_design</a></span><span class="op">(</span><span class="st">"pou"</span>, region <span class="op">=</span> <span class="va">r</span>, income <span class="op">=</span> <span class="st">"High"</span><span class="op">)</span><span class="op">$</span><span class="va">Y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; EUR WPR </span></span>
+<span><span class="co">#&gt; 2.5 2.5</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="why-a-mediator-opening-up-the-screening-step">Why a Mediator? Opening Up the Screening Step<a class="anchor" aria-label="anchor" href="#why-a-mediator-opening-up-the-screening-step"></a>
 </h3>
 <p>For any fit, <code><a href="../reference/pe_mediators.html">pe_mediators()</a></code> shows the evidence the PE
-component acted on, the two path statistics, their p-values, the
-combined screening p-value, and the active flag for every candidate the
-penalized fit selected. This is the per-mediator detail behind the last
-column of the article’s tables.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+component acted on: the two path statistics, the screening p-value (the
+larger of the two path p-values), and the <code>selected</code> flag,
+for every candidate the penalized fit selected. This is the per-mediator
+detail behind the last column of the article’s tables. In this global
+model HBIC picks 0.1, the smallest value of the grid, as it does in
+about half of the article’s cells; the warning a single fit gives at an
+end of its grid is not shown here either.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">des</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_design.html">WHO_mediation_design</a></span><span class="op">(</span><span class="st">"imr"</span><span class="op">)</span>                  <span class="co"># global IMR design</span></span>
 <span><span class="va">gfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>, <span class="va">des</span><span class="op">$</span><span class="va">Y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">Y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">M</span><span class="op">)</span>,</span>
 <span>                     Z <span class="op">=</span> <span class="va">des</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>, scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>                     lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">5</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span>                     lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/pe_mediators.html">pe_mediators</a></span><span class="op">(</span><span class="va">gfit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  mediator name            t_outcome t_exposure screen_p selected</span></span>
-<span><span class="co">#&gt;  2        che_pc_usd      8.234     -1.686     0.0918   FALSE   </span></span>
-<span><span class="co">#&gt;  4        gghed           2.874     0.6476     0.5172   FALSE   </span></span>
-<span><span class="co">#&gt;  9        pvtd_che        1.188     0.537      0.5913   FALSE   </span></span>
-<span><span class="co">#&gt;  10       oops_che        2.003     0.9471     0.3436   FALSE   </span></span>
-<span><span class="co">#&gt;  14       gghed_gge       -0.7627   1.231      0.4457   FALSE   </span></span>
-<span><span class="co">#&gt;  16       pvtd_pc_usd     2.302     -0.8475    0.3967   FALSE   </span></span>
-<span><span class="co">#&gt;  17       oop_pc_usd      -8.491    -1.315     0.1886   FALSE   </span></span>
-<span><span class="co">#&gt;  19       cfa_che         -2.944    0.6753     0.4995   FALSE   </span></span>
-<span><span class="co">#&gt;  21       chi_che         -5.535    3.111      0.0019   FALSE   </span></span>
-<span><span class="co">#&gt;  25       vhi_che         -2.673    -2.494     0.0126   FALSE   </span></span>
-<span><span class="co">#&gt;  26       gge_gdp         -4.26     -3.732     0.0002    TRUE   </span></span>
-<span><span class="co">#&gt;  31       ext_usd         2.809     3.451      0.0050   FALSE   </span></span>
-<span><span class="co">#&gt;  35       ext_ncu_pc      -4.063    -1.373     0.1697   FALSE   </span></span>
-<span><span class="co">#&gt;  38       pvtd_ppp_pc     -0.2667   -0.2293    0.8187   FALSE   </span></span>
-<span><span class="co">#&gt;  39       ext_ppp_pc      -1.438    2.224      0.1505   FALSE   </span></span>
-<span><span class="co">#&gt;  41       ext_gdp         -3.921    0.325      0.7452   FALSE   </span></span>
-<span><span class="co">#&gt;  45       ext_ncu2021     -5.506    1.731      0.0834   FALSE   </span></span>
-<span><span class="co">#&gt;  47       gghed_usd2021   -4.697    0.3339     0.7384   FALSE   </span></span>
-<span><span class="co">#&gt;  50       che_ncu2021_pc  -0.7842   0.18       0.8571   FALSE   </span></span>
-<span><span class="co">#&gt;  52       pvtd_ncu2021_pc 0.2591    0.1229     0.9022   FALSE   </span></span>
-<span><span class="co">#&gt;  53       ext_ncu2021_pc  6.643     -1.532     0.1255   FALSE   </span></span>
-<span><span class="co">#&gt;  57       ext_usd2021_pc  7.506     1.361      0.1735   FALSE</span></span></code></pre></div>
+<span><span class="co">#&gt;  2        che_pc_usd      8.43      -1.686     0.0918   FALSE   </span></span>
+<span><span class="co">#&gt;  4        gghed           3.027     0.6476     0.5172   FALSE   </span></span>
+<span><span class="co">#&gt;  6        ext             1.141     1.534      0.2540   FALSE   </span></span>
+<span><span class="co">#&gt;  9        pvtd_che        1.058     0.537      0.5913   FALSE   </span></span>
+<span><span class="co">#&gt;  10       oops_che        0.9397    0.9471     0.3474   FALSE   </span></span>
+<span><span class="co">#&gt;  14       gghed_gge       -2.405    1.231      0.2183   FALSE   </span></span>
+<span><span class="co">#&gt;  16       pvtd_pc_usd     2.309     -0.8475    0.3967   FALSE   </span></span>
+<span><span class="co">#&gt;  17       oop_pc_usd      -8.1      -1.315     0.1886   FALSE   </span></span>
+<span><span class="co">#&gt;  19       cfa_che         -2.355    0.6753     0.4995   FALSE   </span></span>
+<span><span class="co">#&gt;  21       chi_che         -3.603    3.111      0.0019   FALSE   </span></span>
+<span><span class="co">#&gt;  22       shi_che         2.082     3.703      0.0374   FALSE   </span></span>
+<span><span class="co">#&gt;  25       vhi_che         -3.755    -2.494     0.0126   FALSE   </span></span>
+<span><span class="co">#&gt;  26       gge_gdp         -5.025    -3.732     0.0002    TRUE   </span></span>
+<span><span class="co">#&gt;  29       gghed_usd       -4.748    0.4069     0.6841   FALSE   </span></span>
+<span><span class="co">#&gt;  31       ext_usd         2.95      3.451      0.0032   FALSE   </span></span>
+<span><span class="co">#&gt;  35       ext_ncu_pc      -3.875    -1.373     0.1697   FALSE   </span></span>
+<span><span class="co">#&gt;  38       pvtd_ppp_pc     -0.5555   -0.2293    0.8187   FALSE   </span></span>
+<span><span class="co">#&gt;  39       ext_ppp_pc      -1.532    2.224      0.1256   FALSE   </span></span>
+<span><span class="co">#&gt;  40       pvtd_gdp        2.492     -1.064     0.2875   FALSE   </span></span>
+<span><span class="co">#&gt;  41       ext_gdp         -4.303    0.325      0.7452   FALSE   </span></span>
+<span><span class="co">#&gt;  45       ext_ncu2021     -3.454    1.731      0.0834   FALSE   </span></span>
+<span><span class="co">#&gt;  52       pvtd_ncu2021_pc -4.381    0.1229     0.9022   FALSE   </span></span>
+<span><span class="co">#&gt;  53       ext_ncu2021_pc  5.762     -1.532     0.1255   FALSE   </span></span>
+<span><span class="co">#&gt;  57       ext_usd2021_pc  7.531     1.361      0.1735   FALSE</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -654,37 +618,50 @@ column of the article’s tables.</p>
 </h2>
 <ul>
 <li>The global, regional, and income analyses above are deterministic.
-<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> uses a tuning grid whose defaults
-are set to be
-<code>lambda_grid_global = seq(0.1, 5, length.out = 100)</code> for the
-all-country model. Calling the function with no explicit grid arguments
-reproduces the active mediators and p-values shown here, which the
-package’s test suite checks as a fixed benchmark.</li>
-<li>The Monte Carlo sections are stochastic. The reduced runs reproduce
-the <em>shape</em> of the article’s curves; the
-<code>eval = FALSE</code> blocks give the exact <code>n = 300</code>,
-<code>p = 500</code>, 1,000-replication settings. Set <code>cores</code>
-above 1 to parallelize and <code>seed</code> for exact
-reproducibility.</li>
-<li>Exact real-data p-values depend on the preprocessing the article
-fixes (standardizing the exposure and mediators, centering the outcome,
-leaving the confounder indicators unscaled, and using treatment
-contrasts with alphabetical reference levels for the region and income
-factors); <code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> applies all of this for
-you. See the guided-tour vignette for doing it by hand.</li>
+Called with no explicit grid arguments,
+<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> searches
+<code>seq(0.1, 2, length.out = 100)</code>, the grid behind the
+article’s real-data tables, for the all-country model and for every
+subgroup model, and returns the selected mediators and p-values shown
+here.</li>
+<li>Part I runs no simulation study. Its <code>eval = FALSE</code>
+blocks give the calls that run the article’s designs at their scale and
+with 1,000 replications: <code>n = 300</code> and <code>p = 500</code>
+on the grids of the article’s scripts (passed as
+<code>lambda_grid</code>) for Sections 4.1, 4.2, and S.4.1, and the
+case-study <code>n = 85</code> and <code>p = 1008</code> on the package
+default grid for supplement Section S.4.4, for which the article records
+no grid. Set <code>cores</code> above 1 to parallelize and
+<code>seed</code> for exact reproducibility; a seeded run with
+<code>cores</code> above 1 repeats exactly at the same number of
+cores.</li>
+<li>Exact real-data p-values depend on the preprocessing. The article’s
+text says that covariates are standardized before fitting.
+<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> instead applies the preprocessing
+of the authors’ analysis code behind the article’s tables: it
+standardizes the exposure and mediators, centers the outcome, and leaves
+the confounders (the region and income indicators and the year)
+unscaled. The region and income factors enter through treatment
+contrasts with alphabetical reference levels. The guided-tour vignette
+shows how to do this by hand and what standardizing the confounders as
+well changes.</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Yu, X., and Kelley, K. (in press). Power Enhancement in
+<p>Yu, X., &amp; Kelley, K. (in press). Power Enhancement in
 High-Dimensional Heterogeneous Mediation Analysis. <em>Journal of the
 American Statistical Association</em>.</p>
+<p>Guo, X., Li, R., Liu, J., &amp; Zeng, M. (2022). High-dimensional
+mediation analysis for selecting DNA methylation loci mediating
+childhood trauma and cortisol stress reactivity. <em>Journal of the
+American Statistical Association, 117</em>(539), 1110–1121. <a href="https://doi.org/10.1080/01621459.2022.2053136" class="external-link uri">https://doi.org/10.1080/01621459.2022.2053136</a></p>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session Information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>

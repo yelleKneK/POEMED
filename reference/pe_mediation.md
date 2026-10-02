@@ -1,12 +1,13 @@
-# Power-enhanced test for high-dimensional mediation
+# Power-Enhanced Test for High-Dimensional Mediation
 
 Tests whether any mediator is active among a large, possibly
 intercorrelated set of candidate mediators, for a continuous, binary, or
-count outcome. This is the main entry point of POEMED: name the outcome
-type and it dispatches to the appropriate model, returning one tidy
-table that reports the benchmark Wald test on the total indirect effect
-side by side with the power-enhanced (PE) test, plus the set of
-individual mediators identified as active.
+count outcome, with the power-enhanced (PE) test of Yu and Kelley (in
+press). This is the main entry point of POEMED: name the outcome type
+and it dispatches to the appropriate model, returning one tidy table
+that reports the benchmark Wald test on the total indirect effect side
+by side with the PE test, plus the set of individual mediators the
+screen selected.
 
 ## Usage
 
@@ -20,11 +21,9 @@ pe_mediation(
   method = c("Bonferroni", "BH", "BY"),
   scale = TRUE,
   error_level = 0.05,
-  conf_level = 0.95,
   report_all_methods = FALSE,
   drop_constant = FALSE,
-  lambda_grid = NULL,
-  lambda_grid_reduced = NULL
+  lambda_grid = seq(0.05, 10, length.out = 100)
 )
 ```
 
@@ -45,7 +44,7 @@ pe_mediation(
 
   Numeric matrix of candidate mediators with \\n\\ rows and \\p\\
   columns; \\p\\ may exceed \\n\\. Column names, when present, label the
-  active mediators in the print footer and the mediator table; without
+  selected mediators in the print footer and the mediator table; without
   them mediators are reported by column position.
 
 - Z:
@@ -62,15 +61,31 @@ pe_mediation(
 
   Multiplicity adjustment used to screen individual mediators in the PE
   component: `"Bonferroni"` (familywise error rate control, the
-  default), `"BH"`, or `"BY"` (false discovery rate control; `"BH"`
-  assumes independence or positive dependence among mediators, `"BY"` is
-  valid under arbitrary dependence).
+  default), `"BH"`, or `"BY"` (false discovery rate control by the
+  procedures of Benjamini and Hochberg, 1995, and of Benjamini and
+  Yekutieli, 2001; `"BH"` assumes independence or positive dependence
+  among mediators, `"BY"` is valid under arbitrary dependence). See
+  Details for the screening threshold each one uses.
 
 - scale:
 
   Logical; if `TRUE` (default) the exposures, mediators, and confounders
-  are standardized (and a continuous outcome is centered) before
-  fitting, as the method assumes.
+  are each standardized to mean 0 and standard deviation 1 before
+  fitting, as in the article, and a continuous outcome is centered but
+  not rescaled. The total indirect effect is then the change in the
+  outcome per standard deviation of each exposure: in the units of `Y`
+  for a continuous outcome, in log odds for a binary outcome, and in log
+  mean count for a count outcome. With `FALSE` the inputs are used
+  exactly as supplied, and the total indirect effect is per unit of each
+  exposure. The continuous-outcome fit has no intercept, and the default
+  tuning grid was chosen for standardized columns, so `FALSE` is meant
+  for inputs that are already standardized (and, for a continuous
+  outcome, a `Y` that is already centered); on raw inputs it fits a
+  different model and can even change the sign of the estimate. Because
+  a continuous `Y` is not rescaled, the tuning grid is not expressed in
+  the outcome's units, so the selected mediators, both p-values, and the
+  verdict depend on the units of `Y`: the same data with `Y` multiplied
+  by 10 can select a different set of mediators.
 
 - error_level:
 
@@ -79,18 +94,15 @@ pe_mediation(
   and as the false discovery rate when `method = "BH"` or `"BY"`.
   Default 0.05. This is distinct from the significance level used to
   test the global null (which is the user's choice when reading
-  `pval_pe`); the test is insensitive to `error_level` and remains valid
-  for any fixed value in \\(0, 1)\\.
-
-- conf_level:
-
-  Confidence level for the interval on the total indirect effect.
-  Default 0.95.
+  `pval_pe`). The PE test is asymptotically valid for any fixed value in
+  \\(0, 1)\\, but in finite samples a larger value lets the screen pass
+  more spurious mediators under the null and raises the PE test's size
+  further above the benchmark's (see Details).
 
 - report_all_methods:
 
-  Logical; if `TRUE`, the active-mediator set is computed for all three
-  multiplicity methods (Bonferroni, BH, BY) off the same fit and
+  Logical; if `TRUE`, the selected-mediator set is computed for all
+  three multiplicity methods (Bonferroni, BH, BY) off the same fit and
   recorded for comparison, retrievable with
   [`pe_selection()`](https://yelleknek.github.io/POEMED/reference/pe_selection.md).
   The `method` argument still drives the primary result. Default
@@ -102,44 +114,51 @@ pe_mediation(
   which cannot be standardized or carry signal. If `FALSE` (the default)
   they are an error; if `TRUE` they are dropped with a warning and the
   remaining mediators are renumbered back to their original column
-  positions in the reported active set. Useful for small subgroups where
-  some mediators happen to be constant.
+  positions in the reported selected set. Useful for small subgroups
+  where some mediators happen to be constant.
 
 - lambda_grid:
 
-  Numeric vector of candidate SCAD tuning parameters for the penalized
-  mediator fit; the fit is repeated at each value and the one minimizing
-  the high-dimensional BIC (HBIC) is kept. Default `NULL` uses, for a
-  continuous outcome,
-  [`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md):
-  the grid the article's simulations used at their design, rescaled to
-  this `n` and `p` by the rate \\\sqrt{\log p / n}\\ the theory requires
-  of the tuning parameter; for a binary or count outcome it uses the
-  review-era grid `seq(0.05, 1, length.out = 20)`. The grid's lower end
-  matters most, because the HBIC minimum often sits there and because it
-  decides whether the identified set keeps its error-rate guarantee; see
-  [`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md)
-  for the trade-off with power, measured. The value chosen is reported
-  in the `"tuning"` attribute and the print footer.
-
-- lambda_grid_reduced:
-
-  Numeric vector of candidate tuning parameters for the reduced-model
-  fit that the continuous-outcome Wald test refits (unused for binary
-  and count outcomes). Default `NULL` uses
-  [`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md)
-  with `model = "reduced"` when `lambda_grid` is also `NULL` (the
-  article's reduced-model grid, rescaled), and otherwise `lambda_grid`
-  itself.
+  Numeric vector of candidate tuning parameters for the SCAD penalty
+  (Fan and Li, 2001) in the penalized mediator fit, which for a binary
+  outcome is adaptively rescaled (see
+  [`pe_mediation_logistic()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_logistic.md)).
+  The fit is repeated at each value and the one minimizing the
+  high-dimensional BIC (HBIC) of Wang, Kim, and Li (2013) is kept:
+  whatever the grid, the value selected is the best of the values
+  offered, since HBIC is minimized over the grid and not over every
+  positive lambda. The default, `seq(0.05, 10, length.out = 100)` for
+  every outcome family, is written out in the signature so that it can
+  be edited in place. Every value is fit (the search is not adaptive),
+  so the cost of a fit grows with the length of the grid. The grid can
+  be tuned to the situation. Fewer values, or a range narrowed to where
+  earlier fits put the HBIC minimum, make each fit faster, which matters
+  when many fits are run (a simulation study, for example); a wider or
+  finer grid is worth trying when the selected value is the smallest or
+  largest value of the grid, in which case a non-empty fit warns (class
+  `poemed_grid_boundary`) and the print footer, which reports the full
+  model's choice, says so. For a continuous outcome the benchmark Wald
+  test also needs a penalized fit of the reduced model, the outcome on
+  the mediators and confounders without the exposure; that fit searches
+  the same grid, its choice is `lambda_selected_reduced` in the
+  `"tuning"` attribute, and the warning covers it as well, naming
+  whether the full model, the reduced model, or both sat at the end. For
+  a continuous outcome the grid is fixed while `Y` is centered but not
+  rescaled, so the value HBIC chooses, and with it the selected
+  mediators, depends on the units of `Y` (see `scale`). The grid
+  searched and the value chosen are reported in the `"tuning"` attribute
+  and the print footer.
 
 ## Value
 
 A tidy `data.frame` of class `poemed_tbl`. See
 [`pe_mediation_linear()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_linear.md)
-for the row schema and the attributes. The identified active mediators
-are in the `"active_mediators"` attribute and the print footer; the
-tuning parameter HBIC chose is in the `"tuning"` attribute and the
-footer.
+for the row schema and the attributes. The selected mediators (the
+candidates the screen picked; see Details for the distinction from
+active mediators) are in the `"selected_mediators"` attribute and the
+print footer; the tuning parameter HBIC chose is in the `"tuning"`
+attribute and the footer. The total indirect effect is on the scale
+described under `scale`.
 
 ## Details
 
@@ -148,56 +167,106 @@ effect \\\beta = \Gamma_x \alpha_m\\, the sum of every mediator's
 individual indirect effect. When some indirect effects are positive and
 others negative they can cancel, making \\\beta = 0\\ even though active
 mediators exist, and a test built on \\\beta\\ is then powerless. The
-power-enhanced test adds a component \$\$J_m = \sqrt{p} \sum\_{i=1}^{q}
+benchmark reported here is such a test, the Wald test \\S_n\\ on
+\\\beta\\. For a continuous outcome it is the test of Guo et al. (2022),
+which extends the partially penalized Wald test of Guo et al. (2023) to
+observed confounders. For binary and count outcomes it is the test of
+Guo et al. (2024).
+
+The PE test of Yu and Kelley (in press) follows the power enhancement
+principle of Fan, Liao, and Yao (2015). It adds to \\S_n\\ the component
+(equation 2.9 of the article) \$\$J_m = \sqrt{p} \sum\_{i=1}^{q}
 \sum\_{j \in \hat{S}} \left\|
 \frac{\hat\alpha\_{m,j}}{\hat\sigma\_{m,j}} \right\| \left\|
 \frac{\hat\Gamma\_{x,i,j}}{\hat\sigma\_{\Gamma,i,j}} \right\|
 \mathbf{1}\\\left\\ \max(p\_{1,j}, p\_{2,i,j}) \<
 \frac{\alpha\_{\mathrm{lvl}}}{s q \log\log n} \right\\,\$\$ a sum over
-the selected mediators \\\hat S\\ of the product of the (standardized)
-mediator-on-outcome and exposure-on-mediator statistics, kept only for
-pairs where both paths are individually significant. Because \\J_m\\
+the \\s\\ selected mediators \\\hat S\\ of the product of the
+(standardized) mediator-on-outcome and exposure-on-mediator statistics,
+kept only for pairs where both paths are individually significant;
+\\\alpha\_{\mathrm{lvl}}\\ is `error_level`. That indicator is the
+Bonferroni screen used by `method = "Bonferroni"`. Under `method = "BH"`
+or `"BY"` the indicator is instead \\\mathbf{1}\\\tilde p\_{i,j} \<
+\alpha\_{\mathrm{lvl}} / \log\log n\\\\, where \\\tilde p\_{i,j}\\ is
+the Benjamini and Hochberg (1995) or Benjamini and Yekutieli (2001)
+adjusted value of \\\max(p\_{1,j}, p\_{2,i,j})\\ over the \\s q\\ pairs
+(equations S.22 to S.25 of the article's supplement). Because \\J_m\\
 accumulates magnitudes, opposite-signed indirect effects reinforce
 rather than cancel, so the test \\M\_{PE} = S_n + J_m\\ stays powerful
-under heterogeneous and contrasting mediation while keeping the
-chi-square reference distribution (and hence the Type I error rate) of
-the benchmark test \\S_n\\ under the global null. The indicator also
-identifies which individual mediators are active, with familywise error
-rate control under `method = "Bonferroni"` or false discovery rate
-control under `"BH"` / `"BY"`.
+under heterogeneous and contrasting mediation. The indicator also
+selects individual mediators, with asymptotic familywise error rate
+control under `method = "Bonferroni"` or false discovery rate control
+under `"BH"` / `"BY"`. In this documentation an *active* mediator is one
+whose effect is truly nonzero (the article's usage, as in the global
+null of no active mediator), and a *selected* mediator is one the screen
+picks as statistically significant: the selected set is the method's
+estimate of the active set.
 
-## When to use POEMED
+Both statistics are referred to a chi-square distribution with \\q\\
+degrees of freedom. Under the global null of no active mediator, \\J_m\\
+is zero with probability tending to one, so \\M\_{PE}\\ has the same
+chi-square limit as \\S_n\\ and the PE test is asymptotically valid for
+any fixed `error_level`, by Theorem 1 of Yu and Kelley (in press). That
+guarantee is asymptotic. In finite samples, under a null in which some
+mediators affect the outcome but the exposure affects none of them, the
+screen passes one of those mediators with probability of about
+`error_level / log(log(n))`, which is 0.030 at \\n = 200\\ with
+`error_level = 0.05`, and \\J_m\\ is then large enough to reject. The PE
+test's size can therefore exceed the benchmark's by up to about that
+amount. For example,
+`pe_power_curve(200, 100, pattern = "homogeneous", c1_grid = 0, n_rep = 2000, seed = 113)`
+gave rejection rates at the 0.05 level of 0.0475 for the benchmark and
+0.0620 for the PE test over 2,000 null samples, and 0.0510 for the PE
+test with `error_level = 0.01` (Monte Carlo standard errors about
+0.005). A smaller `error_level` narrows the gap, at some cost in
+identifying active mediators.
+
+## When to Use POEMED
 
 POEMED is for the global question, “is there any active mediator among
-many candidates?”, followed by the identification of the active ones. It
+many candidates?”, followed by the selection of individual mediators. It
 assumes a linear or generalized linear outcome model, a sparse set of
 active mediators, standardized inputs, and complete data. Some practical
-limits, seen on simulated data during the package's release audit:
+limits, seen on simulated data:
 
 - Sample size. The penalized selection needs \\n\\ large relative to
-  \\\log p\\ and to the signal. With \\n\\ near 100 and \\p\\ in the
-  thousands under the contrasting pattern the selection keeps a single
-  mediator and the power-enhanced test has nothing to add. The default
-  grid's floor rises as \\n\\ falls (see
-  [`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md)),
-  which protects the identified set but costs global power at small
-  designs.
+  \\\log p\\ and to the signal. With \\n = 100\\ and \\p = 2000\\ under
+  the contrasting pattern (continuous outcome, \\c_1 = 1\\, default
+  grid, seeds 1 to 10) the selection kept at most one mediator: one in 4
+  of the 10 samples and none in the other 6. The power-enhanced test
+  could then draw on that one mediator only, not on the contrasting
+  structure; it rejected in 4 of the 10 samples, and the benchmark in 2.
 
-- Strongly correlated mediators. With an autoregressive correlation of
-  0.9 among neighboring mediators the selection keeps one representative
-  of a correlated block (an active mediator was recovered in 3 of 10
-  seeds, against 10 of 10 at a correlation of 0.5), so the identified
-  set is unstable from sample to sample even when the global test
-  rejects.
+- Strongly correlated mediators. Correlation among the mediators weakens
+  both the selection and the screen. Under the contrasting pattern
+  (continuous outcome, \\n = 200\\, \\p = 60\\, \\c_1 = 1\\, default
+  grid, seeds 1 to 10) the screen selected at least one mediator in 6 of
+  10 samples with an autoregressive correlation of 0.9 among neighboring
+  mediators, against 10 of 10 at 0.5, and the selected set varied from
+  sample to sample (one sample named a null mediator beside an active
+  one at both correlations).
+
+- Selected mediators in finite samples. The screen's control of its
+  error rate is asymptotic. Under the contrasting pattern with a strong
+  signal (continuous outcome, \\c_1 = 1\\, default grid, Bonferroni
+  screen, `error_level = 0.05`) the selected set held an inactive
+  mediator in 0.14 of 400 samples at \\n = 150\\, \\p = 60\\ and in 0.11
+  of 200 samples at \\n = 300\\, \\p = 500\\; the rate was 0.05 under
+  the homogeneous pattern at the smaller design and 0.00 with no signal.
+  It depends on the tuning grid: 20 values from 0.2 to 0.39 gave 0.00 in
+  the same runs, with lower recall (0.13 against 0.48 at the smaller
+  design, 0.25 against 0.47 at the larger).
 
 - Rare binary outcomes. With about 2 to 3 percent events at \\n = 300\\
   the penalized logistic fit selects nothing at any grid value; the fit
   is empty and the function says so.
 
-- Overdispersed counts. The count model is Poisson; under negative
-  binomial overdispersion its size was not inflated at \\n = 200\\, \\p
-  = 100\\, but about a tenth of the fits were empty. The count path is
-  also the slowest, 15 to 30 times the continuous one.
+- Overdispersed counts. The count model is Poisson. In null simulations
+  with negative binomial counts (size parameter 1) at \\n = 200\\, \\p =
+  100\\, 300 replications on a grid of 20 values from 0.05 to 1, its
+  size was not inflated, but about a tenth of the fits were empty. A
+  count fit can also take several times as long as a continuous fit of
+  the same design.
 
 - Missing values are not handled; supply complete cases.
 
@@ -205,35 +274,89 @@ For a single mediator, or a few mediators fit as one structural model
 (indirect effects with confidence intervals, likelihood ratio tests of
 arbitrary indirect effects, moderated mediation), the DMAR package is
 the tool; POEMED's contribution is the high-dimensional global test. The
-other high-dimensional tests the article benchmarks against (HILMA,
-GlobalTest, HDMT, DACT) live in their own packages; the vignette
-`poemed-vs-competitors` shows how to run them beside a POEMED fit.
+other high-dimensional methods the article compares against are HILMA
+(Zhou, Wang, & Zhao, 2020), GlobalTest (Djordjilovic et al., 2019), HDMT
+(Dai, Stanford, & LeBlanc, 2022), and DACT (Liu et al., 2022). POEMED
+does not depend on them. HDMT is on CRAN, and GlobalTest is the
+Bioconductor package globaltest. The CRAN package freebird, which
+implemented HILMA, was archived in July 2026, and the CRAN package named
+DACT is an unrelated clinical-trials package, not the method of Liu et
+al. The vignette `poemed-vs-competitors` shows how to call HILMA and
+GlobalTest beside a POEMED fit.
+
+## How to Cite
+
+If you use POEMED in published work, please cite Yu and Kelley (in
+press), the article that introduces its methods and the package.
+`citation("POEMED")` gives the full reference and a BibTeX entry.
 
 ## References
 
-Yu, X., and Kelley, K. (in press). Power Enhancement in High-Dimensional
+Yu, X., & Kelley, K. (in press). Power Enhancement in High-Dimensional
 Heterogeneous Mediation Analysis. *Journal of the American Statistical
-Association*. (The article these methods implement.)
+Association*.
 
-Fan, J., Liao, Y., and Yao, J. (2015). Power enhancement in
+Fan, J., Liao, Y., & Yao, J. (2015). Power enhancement in
 high-dimensional cross-sectional tests. *Econometrica, 83*(4),
 1497–1541. [doi:10.3982/ECTA12749](https://doi.org/10.3982/ECTA12749)
 
-Guo, X., Li, R., Liu, J., and Zeng, M. (2022). High-dimensional
-mediation analysis for selecting DNA methylation loci mediating
-childhood trauma and cortisol stress reactivity. *Journal of the
-American Statistical Association, 117*(539), 1110–1121.
+Guo, X., Li, R., Liu, J., & Zeng, M. (2022). High-dimensional mediation
+analysis for selecting DNA methylation loci mediating childhood trauma
+and cortisol stress reactivity. *Journal of the American Statistical
+Association, 117*(539), 1110–1121.
 [doi:10.1080/01621459.2022.2053136](https://doi.org/10.1080/01621459.2022.2053136)
 
-Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery
+Guo, X., Li, R., Liu, J., & Zeng, M. (2023). Statistical inference for
+linear mediation models with high-dimensional mediators and application
+to studying stock reaction to COVID-19 pandemic. *Journal of
+Econometrics, 235*(1), 166–179.
+[doi:10.1016/j.jeconom.2022.03.001](https://doi.org/10.1016/j.jeconom.2022.03.001)
+
+Guo, X., Li, R., Liu, J., & Zeng, M. (2024). Estimations and tests for
+generalized mediation models with high-dimensional potential mediators.
+*Journal of Business & Economic Statistics, 42*(1), 243–256.
+[doi:10.1080/07350015.2023.2174548](https://doi.org/10.1080/07350015.2023.2174548)
+
+Fan, J., & Li, R. (2001). Variable selection via nonconcave penalized
+likelihood and its oracle properties. *Journal of the American
+Statistical Association, 96*(456), 1348–1360.
+[doi:10.1198/016214501753382273](https://doi.org/10.1198/016214501753382273)
+
+Wang, L., Kim, Y., & Li, R. (2013). Calibrating nonconvex penalized
+regression in ultra-high dimension. *The Annals of Statistics, 41*(5),
+2505–2536. [doi:10.1214/13-AOS1159](https://doi.org/10.1214/13-AOS1159)
+
+Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery
 rate: A practical and powerful approach to multiple testing. *Journal of
 the Royal Statistical Society, Series B, 57*(1), 289–300.
 [doi:10.1111/j.2517-6161.1995.tb02031.x](https://doi.org/10.1111/j.2517-6161.1995.tb02031.x)
 
-Benjamini, Y., and Yekutieli, D. (2001). The control of the false
+Benjamini, Y., & Yekutieli, D. (2001). The control of the false
 discovery rate in multiple testing under dependency. *The Annals of
 Statistics, 29*(4), 1165–1188.
 [doi:10.1214/aos/1013699998](https://doi.org/10.1214/aos/1013699998)
+
+Zhou, R. R., Wang, L., & Zhao, S. D. (2020). Estimation and inference
+for the indirect effect in high-dimensional linear mediation models.
+*Biometrika, 107*(3), 573–589.
+[doi:10.1093/biomet/asaa016](https://doi.org/10.1093/biomet/asaa016)
+
+Djordjilovic, V., Page, C. M., Gran, J. M., Nost, T. H., Sandanger, T.
+M., Veierod, M. B., & Thoresen, M. (2019). Global test for
+high-dimensional mediation: Testing groups of potential mediators.
+*Statistics in Medicine, 38*(18), 3346–3360.
+[doi:10.1002/sim.8199](https://doi.org/10.1002/sim.8199)
+
+Dai, J. Y., Stanford, J. L., & LeBlanc, M. (2022). A multiple-testing
+procedure for high-dimensional mediation hypotheses. *Journal of the
+American Statistical Association, 117*(537), 198–213.
+[doi:10.1080/01621459.2020.1765785](https://doi.org/10.1080/01621459.2020.1765785)
+
+Liu, Z., Shen, J., Barfield, R., Schwartz, J., Baccarelli, A. A., & Lin,
+X. (2022). Large-scale hypothesis testing for causal mediation effects
+with applications in genome-wide epigenetic studies. *Journal of the
+American Statistical Association, 117*(537), 67–81.
+[doi:10.1080/01621459.2021.1914634](https://doi.org/10.1080/01621459.2021.1914634)
 
 ## See also
 
@@ -241,15 +364,12 @@ The outcome-specific workers
 [`pe_mediation_linear()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_linear.md),
 [`pe_mediation_logistic()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_logistic.md),
 [`pe_mediation_poisson()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_poisson.md);
-[`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md)
-for the default tuning grid;
 [`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md)
 to generate data;
 [`pe_power_curve()`](https://yelleknek.github.io/POEMED/reference/pe_power_curve.md)
-to reproduce the article's size and power studies.
+to run the designs of the article's size and power studies.
 
 Other mediation tests:
-[`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md),
 [`pe_mediate()`](https://yelleknek.github.io/POEMED/reference/pe_mediate.md),
 [`pe_mediation_linear()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_linear.md),
 [`pe_mediation_logistic()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_logistic.md),
@@ -272,21 +392,30 @@ set.seed(113)
 d <- simulate_mediation_data(n = 200, p = 60, pattern = "contrasting",
                              outcome = "continuous", c1 = 1)
 pe_mediation(d$X, d$Y, d$M, outcome = "continuous")
+#> Warning: HBIC selected lambda = 0.05, the smallest value of `lambda_grid`, for the full model and the reduced model of the benchmark test. The criterion is minimized over the grid alone, so its minimum may lie beyond that end or between the end and its neighbor. Consider extending the grid past it and using a finer partition (more values), and compare the selected mediators and p-values across grids.
 #>  term                  value   
-#>  stat_hdmm             0.03881 
-#>  pval_hdmm             0.8438  
-#>  stat_pe               174.2   
-#>  j_pe                  174.1   
+#>  stat_hdmm             1.302   
+#>  pval_hdmm             0.2538  
+#>  stat_pe               865.5   
+#>  j_pe                  864.2   
 #>  pval_pe               < 0.0001
-#>  total_indirect_effect 0.01054 
-#>  total_indirect_lower  -0.0943 
-#>  total_indirect_upper  0.1154  
-#>  n_active_mediators    1       
+#>  total_indirect_effect -0.08396
+#>  n_selected_mediators  3       
 #>  df                    1       
 #>  n_candidate_mediators 60      
 #>  n_observations        200     
 #> 
 #> Outcome model: continuous (linear)
-#> Active mediators identified (1): 2
-#> Tuning parameter (HBIC): lambda = 0.199 from 20 values in [0.199, 0.388] (the grid's lower end)
+#> Selected mediators (3): 2, 3, 4
+#> Tuning parameter (HBIC): lambda = 0.05 from 100 values in [0.05, 10] (the grid's lower end)
+# HBIC chose 0.05, the smallest value of the default grid, so the fit
+# warned (class poemed_grid_boundary). A grid that extends below it and
+# is spaced more finely moves the choice inside the grid and keeps the
+# same three mediators.
+finer <- pe_mediation(d$X, d$Y, d$M, outcome = "continuous",
+                      lambda_grid = seq(0.01, 10, length.out = 200))
+attr(finer, "tuning")$lambda_selected
+#> [1] 0.06020101
+attr(finer, "selected_mediators")
+#> [1] 2 3 4
 ```

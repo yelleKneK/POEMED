@@ -1,4 +1,4 @@
-# Simulate high-dimensional mediation data
+# Simulate High-Dimensional Mediation Data
 
 Generates a data set from the mediation models studied in the article,
 for a continuous, binary, or count outcome, under the homogeneous or
@@ -48,9 +48,12 @@ simulate_mediation_data(
 - pattern:
 
   Mediation pattern: `"homogeneous"` (active effects share a sign) or
-  `"contrasting"` (active effects cancel; total indirect effect zero).
-  `"heterogeneous"` is accepted as a synonym for `"contrasting"`.
-  Ignored when `alpha_m` is supplied directly.
+  `"contrasting"` (active effects of opposite sign). `"heterogeneous"`
+  is accepted as a synonym for `"contrasting"`. Ignored when `alpha_m`
+  is supplied directly. The presets are the article's. With the default
+  `tau`, the contrasting presets for the continuous and binary outcomes
+  cancel to a total indirect effect of zero, while the count preset, (0,
+  0, 0, 0.8, -0.7), gives a total indirect effect of -0.03 times `c1`.
 
 - c1:
 
@@ -66,7 +69,7 @@ simulate_mediation_data(
 - q:
 
   Number of exposures. Default 1. For `q > 1` you must supply `tau` as a
-  \\q \times p\\ matrix.
+  `q` by `p` matrix.
 
 - d:
 
@@ -76,14 +79,16 @@ simulate_mediation_data(
 
 - alpha_m:
 
-  Optional length-\\p\\ vector of mediator-on-outcome coefficients,
-  overriding the `pattern` preset.
+  Optional numeric vector of `p` finite mediator-on-outcome
+  coefficients, overriding the `pattern` preset.
 
 - tau:
 
-  Optional base pattern for \\\Gamma_x\\. Default builds the article's
-  \\\tau = (0.1, 0.2, 0.3, 0.4, 0.5, \text{noise})\\ for `q = 1`;
-  required (as a \\q \times p\\ matrix) when `q > 1`.
+  Optional base pattern for \\\Gamma_x\\, finite numbers. By default it
+  is the article's (0.1, 0.2, 0.3, 0.4, 0.5, noise), with the noise
+  loadings drawn from N(0, 0.5^2), for `q = 1`. Required when `q > 1`,
+  as a `q` by `p` matrix (one row per exposure) or a vector of its
+  values in column order; when `q = 1` a vector of length `p` serves.
 
 - rho:
 
@@ -96,23 +101,29 @@ simulate_mediation_data(
 
 - alpha_z, Gamma_z:
 
-  Optional confounder coefficients (length \\d\\ vector and \\d \times
-  p\\ matrix). Default zero when `d > 0`.
+  Optional confounder coefficients: a vector of `d` finite numbers and a
+  `d` by `p` matrix (when `d = 1`, a vector of length `p` serves for
+  `Gamma_z`). Each defaults to zeros when `d > 0`. They are used only
+  when `d > 0`; supplying either with `d = 0`, where it would be
+  ignored, is an error.
 
 - seed:
 
-  Optional integer seed. When supplied it is set locally and the
-  caller's random number generator state is restored on exit; `NULL`
-  (default) leaves the random number generator alone.
+  Optional integer seed. When supplied it is set for the duration of the
+  call and the caller's random number generator state is restored on
+  exit. `NULL` (the default) sets no seed: the draws come from the
+  session's random number stream, which the call advances as any random
+  function does.
 
 ## Value
 
 A list with the simulated data and the truth used to generate it: `X`
-(\\n \times q\\), `M` (\\n \times p\\), `Y` (length \\n\\), `Z` (\\n
-\times d\\ or `NULL`), the coefficient values `alpha_m`, `Gamma_x`,
-`alpha_x`, the total indirect effect `beta = Gamma_x alpha_m`, and
-`active_mediators` (the indices that are truly active, i.e. nonzero in
-both paths).
+(`n` by `q`), `M` (`n` by `p`), `Y` (length `n`), `Z` (`n` by `d`, or
+`NULL`), the coefficient values `alpha_m`, `Gamma_x`, `alpha_x`, the
+total indirect effect `beta` (`Gamma_x` times `alpha_m`), and
+`active_mediators` (the indices of the truly active mediators, those
+nonzero in both paths), together with `n`, `p`, `q`, `outcome`, and
+`pattern`.
 
 ## Details
 
@@ -123,11 +134,11 @@ mediators follow \\M = X \Gamma_x + Z \Gamma_z + \varepsilon_m\\ with
 with parameter `rho`. The exposure-on-mediator coefficient is \\\Gamma_x
 = c_1 \tau\\, where the base pattern \\\tau\\ has small increasing
 loadings on the first five mediators and random noise loadings on the
-rest, so `c1` scales the overall \\X \to M\\ signal (and `c1 = 0` gives
-the global null of no mediation). The outcome is generated from its
-model with mediator coefficients \\\alpha_m\\ (the preset for the chosen
-`pattern`, or a user-supplied vector) and direct effect \\\alpha_x =
-c_2\\:
+rest, so `c1` scales the overall exposure-to-mediator signal (and
+`c1 = 0` gives the global null of no mediation). The outcome is
+generated from its model with mediator coefficients \\\alpha_m\\ (the
+preset for the chosen `pattern`, or a user-supplied vector) and direct
+effect \\\alpha_x = c_2\\:
 
 - continuous: \\Y = M\alpha_m + X\alpha_x + Z\alpha_z + \varepsilon_y\\,
   \\\varepsilon_y \sim N(0, \sigma_y^2)\\;
@@ -135,9 +146,19 @@ c_2\\:
 - binary: \\Y \sim \mathrm{Bernoulli}(\mathrm{logit}^{-1}( M\alpha_m +
   X\alpha_x + Z\alpha_z))\\;
 
-- count: \\Y \sim \mathrm{Poisson}(\exp(\eta))\\, with the log-mean
-  \\\eta\\ clamped to \\\[-5, 5\]\\ to guard against overflow, as in the
-  article.
+- count: \\Y \sim \mathrm{Poisson}(\exp(\eta))\\, with each value of the
+  log-mean \\\eta\\ clamped to the interval from -5 to 5 (a value
+  outside it is set to the nearer endpoint) to guard against overflow.
+
+Every design argument is checked before any random number is drawn: a
+coefficient vector or matrix of the wrong length or shape, or one
+holding a missing or infinite value, stops with a message naming it.
+
+## References
+
+Yu, X., & Kelley, K. (in press). Power Enhancement in High-Dimensional
+Heterogeneous Mediation Analysis. *Journal of the American Statistical
+Association*.
 
 ## See also
 
@@ -172,6 +193,6 @@ dim(d$M)
 #> [1] 100  50
 d$active_mediators       # truly active mediators
 #> [1] 1 2 3 4
-d$beta                   # total indirect effect (zero under "contrasting")
+round(d$beta, 10)        # total indirect effect, zero up to rounding error
 #> [1] 0
 ```

@@ -1,9 +1,9 @@
-# Monte Carlo study of individual-mediator identification (FWER / FDR)
+# Monte Carlo Study of Individual-Mediator Identification (FWER / FDR)
 
 Evaluates how well the power-enhanced screen recovers the *individual*
 active mediators, the experiment reported in the article's supplement.
 For each signal-strength scale \\c_1\\ on a grid it simulates many data
-sets, identifies the active set under each multiplicity method, and
+sets, selects a set of mediators under each multiplicity method, and
 scores those selections against the known truth, returning the empirical
 familywise error rate, false discovery rate, precision, and recall. This
 complements
@@ -25,8 +25,7 @@ pe_identification_study(
   methods = c("Bonferroni", "BH", "BY"),
   error_level = 0.05,
   truth = c("outcome_effect", "mediation"),
-  lambda_grid = NULL,
-  lambda_grid_reduced = NULL,
+  lambda_grid = seq(0.05, 10, length.out = 100),
   outcome_args = list(),
   cores = 1L,
   seed = NULL,
@@ -68,9 +67,9 @@ pe_identification_study(
 
 - methods:
 
-  Multiplicity methods to evaluate, any of `"Bonferroni"` (familywise
-  error rate), `"BH"`, and `"BY"` (false discovery rate). Default all
-  three.
+  Multiplicity methods to evaluate, one or more of `"Bonferroni"`
+  (familywise error rate), `"BH"`, and `"BY"` (false discovery rate),
+  each named once. Default all three.
 
 - error_level:
 
@@ -80,40 +79,55 @@ pe_identification_study(
 - truth:
 
   Which mediators count as truly active: `"outcome_effect"` (nonzero
-  outcome coefficient, the article's convention) or `"mediation"` (both
-  paths nonzero). See Details.
+  outcome coefficient, the convention of the supplement's identification
+  tables) or `"mediation"` (both paths nonzero, the article's definition
+  of the true active set in its Theorem 3). See Details.
 
-- lambda_grid, lambda_grid_reduced:
+- lambda_grid:
 
   Passed to
   [`pe_mediation()`](https://yelleknek.github.io/POEMED/reference/pe_mediation.md):
-  the tuning grids for the penalized fit. Default `NULL`, the family's
-  default grid (see
-  [`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md)).
+  the tuning grid for the penalized fit, by default
+  `seq(0.05, 10, length.out = 100)` (see Details). A shorter or narrower
+  grid speeds a study up.
 
 - outcome_args:
 
-  A list of further arguments forwarded to
+  A named list of further arguments forwarded to
   [`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md)
-  (for example `rho`, `q`, `d`, `tau`, `alpha_m`). Default empty. The
-  design arguments this function sets itself (`n`, `p`, `outcome`,
-  `pattern`, `c1`, `c2`) and `seed` may not appear here.
+  (for example `rho`, `q`, `d`, `tau`, `alpha_m`). Default empty. Each
+  name must identify one argument of
+  [`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md);
+  an unknown or ambiguous name stops with an error. The design arguments
+  this function sets itself (`n`, `p`, `outcome`, `pattern`, `c1`, `c2`)
+  and `seed` may not appear here, whether spelled in full or
+  abbreviated.
 
 - cores:
 
   Number of CPU cores for the replications. Values above 1 fork via the
-  base parallel package (Unix only); a seeded parallel run is
-  reproducible across runs at the same `cores` but need not match a
-  serial run. Default 1.
+  base parallel package (Unix only) and run the replications on the
+  `"L'Ecuyer-CMRG"` generator (the caller's generator kind is restored
+  on exit); a seeded parallel run is reproducible across runs at the
+  same `cores` but need not match a serial run. The parallel streams are
+  handed out afresh from the same generator state at every point of
+  `c1_grid`, so with `cores` above 1 each grid point replays the same
+  `n_rep` random draws (common random numbers) and the rows at different
+  grid points share their Monte Carlo noise. With `cores = 1` every grid
+  point draws fresh data. Default 1.
 
 - seed:
 
-  Optional integer seed, set locally with the caller's random number
-  generator state restored on exit.
+  Optional integer seed. When supplied it is set for the duration of the
+  call and the caller's random number generator state is restored on
+  exit. `NULL` (the default) sets no seed: the draws come from the
+  session's random number stream, which the call advances as any random
+  function does.
 
 - progress:
 
-  Logical; if `TRUE`, print a line per grid point. Default `FALSE`.
+  `TRUE` or `FALSE`; if `TRUE`, print a line per grid point. Default
+  `FALSE`.
 
 ## Value
 
@@ -127,37 +141,58 @@ selected no mediator). The settings are recorded in the attributes
 
 ## Details
 
-The four metrics follow the article's supplement. In each replication
-the selected set is compared with the truth set; the familywise error
-rate is the proportion of replications selecting at least one mediator
-outside the truth set, the false discovery rate is the mean false
-discovery proportion (zero when nothing is selected), precision is the
+The supplement of Yu and Kelley (in press) reports four metrics,
+empirical FWER, empirical FDR, precision, and recall, without defining
+them; this function computes them as follows. In each replication the
+selected set is compared with the truth set. The familywise error rate
+is the proportion of replications selecting at least one mediator
+outside the truth set. The false discovery rate is the mean false
+discovery proportion (zero when nothing is selected). Precision is the
 mean proportion of selected mediators that are true (scored zero when
 nothing is selected), and recall is the mean proportion of true
-mediators selected. Each is a Monte Carlo proportion with standard error
-about \\\sqrt{r(1 - r) / n\_{rep}}\\; the article uses 1000
-replications.
+mediators selected. The article uses 1000 replications.
 
-What counts as a true mediator is set by `truth`. The article scores a
-mediator as active when its outcome coefficient \\\alpha\_{m,j}\\ is
-nonzero (`truth = "outcome_effect"`, the default), which is what its
-supplement tables use and what makes precision and recall defined at
-\\c_1 = 0\\, where the exposure-on-mediator paths are all zero; there
-the familywise error rate is the probability of selecting a mediator
-with no outcome effect. Under `truth = "mediation"` a mediator is active
-only when both paths are nonzero (the simulator's `active_mediators`),
-so at \\c_1 = 0\\ no mediator is active, any selection is a false
-positive, and recall is `NA`. For nonzero \\c_1\\ the two definitions
-agree under the article's designs, whose exposure-on-mediator loadings
-are all nonzero.
+The familywise error rate is a proportion of replications, so its Monte
+Carlo standard error is \\\sqrt{r(1 - r) / n\_{valid}}\\, with \\r\\ the
+reported rate. The other three metrics are means of per-replication
+fractions between 0 and 1, for which that formula is only an upper
+bound. Their standard error is the standard deviation of the
+per-replication values divided by \\\sqrt{n\_{valid}}\\, and for recall
+it can be as little as a third of the bound.
 
-The tuning grid governs these rates as much as the screen does (see
-[`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md));
-the default reproduces the article's settings.
+What counts as a true mediator is set by `truth`. Under
+`truth = "outcome_effect"` (the default) a mediator is true when its
+outcome coefficient \\\alpha\_{m,j}\\ is nonzero. This is the convention
+of the supplement's identification tables: their \\c_1 = 0\\ rows report
+positive precision and recall, which only a truth set that is nonempty
+when the exposure-on-mediator paths are all zero allows. There the
+familywise error rate is the probability of selecting a mediator with no
+outcome effect. Under `truth = "mediation"` a mediator is true only when
+both paths are nonzero. That is the definition of the true active set in
+Theorem 3 of the article, against which its familywise error guarantee
+is stated, and of the simulator's `active_mediators`. At \\c_1 = 0\\ no
+mediator is then active, any selection is a false positive, and recall
+is `NA`. For nonzero \\c_1\\ the two definitions agree under the
+article's designs, whose exposure-on-mediator loadings are all nonzero.
+
+The tuning grid governs these rates as much as the screen does. Every
+replication searches the same grid: the package default
+`seq(0.05, 10, length.out = 100)`, or the grid passed as `lambda_grid`,
+and each fit keeps the best value the grid offers. A shorter or narrower
+grid speeds a study up; the single-fit warning for a choice at an end of
+the grid is not raised inside a study, which searches a fixed grid by
+design. The reproduction vignette states the grids of the article's own
+scripts.
+
+## How to Cite
+
+If you use POEMED in published work, please cite Yu and Kelley (in
+press), the article that introduces its methods and the package.
+`citation("POEMED")` gives the full reference and a BibTeX entry.
 
 ## References
 
-Yu, X., and Kelley, K. (in press). Power Enhancement in High-Dimensional
+Yu, X., & Kelley, K. (in press). Power Enhancement in High-Dimensional
 Heterogeneous Mediation Analysis. *Journal of the American Statistical
 Association*.
 
@@ -166,8 +201,7 @@ Association*.
 [`pe_power_curve()`](https://yelleknek.github.io/POEMED/reference/pe_power_curve.md)
 for the global test,
 [`pe_selection()`](https://yelleknek.github.io/POEMED/reference/pe_selection.md)
-for the per-method active set of a single fit,
-[`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md).
+for the per-method selected set of a single fit.
 
 Other mediation simulation:
 [`guo_calibration`](https://yelleknek.github.io/POEMED/reference/guo_calibration.md),
@@ -189,18 +223,22 @@ Xiufan Yu and Ken Kelley
 # n_rep = 5 keeps this example fast; a rate from five replications has a
 # Monte Carlo standard error of up to 0.22, so read the shape, not the
 # numbers. A reported study uses the article's design (n = 300, p = 500)
-# and 1000 replications.
+# and 1000 replications. A study is also where a shorter tuning grid
+# pays: every replication searches the whole grid, so this one passes 20
+# values from 0.05 to 2 instead of the default 100 values from 0.05 to 10
+# (see the lambda_grid argument of ?pe_mediation).
 set.seed(113)
 pe_identification_study(n = 200, p = 60, outcome = "continuous",
                         pattern = "contrasting", c1_grid = c(0, 1),
-                        n_rep = 5)
-#>  c1 method     fwer fdr precision recall n_valid n_empty
-#>  0  Bonferroni 0    0   0         0      5       0      
-#>  0  BH         0    0   0         0      5       0      
-#>  0  BY         0    0   0         0      5       0      
-#>  1  Bonferroni 0    0   0.8       0.2    5       0      
-#>  1  BH         0    0   0.8       0.3    5       0      
-#>  1  BY         0    0   0.8       0.25   5       0      
+                        n_rep = 5,
+                        lambda_grid = seq(0.05, 2, length.out = 20))
+#>  c1 method     fwer fdr  precision recall n_valid n_empty
+#>  0  Bonferroni 0    0    0         0      5       0      
+#>  0  BH         0    0    0         0      5       0      
+#>  0  BY         0    0    0         0      5       0      
+#>  1  Bonferroni 0    0    1         0.6    5       0      
+#>  1  BH         0.2  0.08 0.92      0.7    5       0      
+#>  1  BY         0    0    1         0.6    5       0      
 #> 
 #> Outcome: continuous
 ```

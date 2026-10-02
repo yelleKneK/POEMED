@@ -6,7 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>POEMED: Power Enhancement for High-Dimensional Mediation Analysis • POEMED</title>
-<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- katex math --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script><script src="katex-auto.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -39,7 +40,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="articles/reproducing-the-article.html">Reproducing the Article's Analyses With POEMED</a></li>
+    <li><a class="dropdown-item" href="articles/poemed-vs-competitors.html">POEMED and the Competition: A Head-to-Head</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul>
 </li>
@@ -62,16 +65,16 @@
 <img src="logo.svg" class="logo" alt=""><h1 id="poemed-power-enhancement-for-high-dimensional-mediation-analysis-">POEMED: Power Enhancement for High-Dimensional Mediation Analysis <a class="anchor" aria-label="anchor" href="#poemed-power-enhancement-for-high-dimensional-mediation-analysis-"></a>
 </h1>
 </div>
-<p>POEMED implements powerful global tests for high-dimensional mediation analysis, for continuous, binary, and count outcomes. It answers the question <em>“is there any active mediator among a large set of candidate mediators?”</em> and, when the answer is yes, identifies which individual mediators are active. The name comes from POwer-Enhanced MEDiation and is pronounced “POE-med”.</p>
+<p>POEMED implements powerful global tests for high-dimensional mediation analysis, for continuous, binary, and count outcomes. It answers the question <em>“is there any active mediator among a large set of candidate mediators?”</em> and, when the answer is yes, reports which individual mediators the screen selects. The name comes from POwer-Enhanced MEDiation and is pronounced “POE-med”.</p>
 <div class="section level2">
-<h2 id="why-power-enhancement">Why power enhancement<a class="anchor" aria-label="anchor" href="#why-power-enhancement"></a>
+<h2 id="why-power-enhancement">Why Power Enhancement<a class="anchor" aria-label="anchor" href="#why-power-enhancement"></a>
 </h2>
-<p>The conventional high-dimensional mediation test targets the <strong>total indirect effect</strong> <code>beta = Gamma_x' alpha_m</code>, the sum of every mediator’s individual indirect effect. When some indirect effects are positive and others negative they can cancel, making <code>beta = 0</code> even though active mediators exist, and a test built on <code>beta</code> is then powerless. The power-enhanced (PE) test adds a component <code>J_m</code> that accumulates the marginal signal from each individual mediator. Because <code>J_m</code> sums magnitudes, opposite-signed effects reinforce rather than cancel, so the test stays powerful under heterogeneous and contrasting mediation while preserving the Type I error rate of the benchmark test under the global null.</p>
+<p>The conventional high-dimensional mediation test targets the <strong>total indirect effect</strong> <code>beta = Gamma_x' alpha_m</code>, the sum of every mediator’s individual indirect effect. When some indirect effects are positive and others negative they can cancel, making <code>beta = 0</code> even though active mediators exist, and a test built on <code>beta</code> is then powerless. The power-enhanced (PE) test adds a component <code>J_m</code> that accumulates the marginal signal from each individual mediator. Because <code>J_m</code> sums magnitudes, opposite-signed effects reinforce rather than cancel, so the test stays powerful under heterogeneous and contrasting mediation. Under the global null the enhancement is built to vanish: as the sample size and the number of candidate mediators grow, the test’s Type I error rate approaches the nominal level, as the benchmark’s does, and in finite samples it rejects slightly more often than the benchmark.</p>
 </div>
 <div class="section level2">
-<h2 id="when-to-use-poemed">When to use POEMED<a class="anchor" aria-label="anchor" href="#when-to-use-poemed"></a>
+<h2 id="when-to-use-poemed">When to Use POEMED<a class="anchor" aria-label="anchor" href="#when-to-use-poemed"></a>
 </h2>
-<p>POEMED answers the global question, <em>“is there any active mediator among many candidates?”</em>, and then names the active ones. Reach for it when the candidate mediators number in the dozens or more (<code>p</code> may exceed <code>n</code>), the outcome is continuous, binary, or a count, and the individual mediation effects may differ in sign. For a single mediator, or a few mediators fit as one structural model (indirect effects with confidence intervals, likelihood ratio tests of arbitrary indirect effects, moderated mediation), use <a href="https://CRAN.R-project.org/package=DMAR" class="external-link">DMAR</a> instead. Among high-dimensional global tests, POEMED implements the power-enhanced tests of Yu and Kelley (in press) and the HDMM benchmark they extend; HILMA, GlobalTest, HDMT, and DACT are separate methods in their own packages, and the vignette <code>poemed-vs-competitors</code> shows how to run them beside a POEMED fit. The guided-tour vignette and <code><a href="reference/pe_mediation.html">?pe_mediation</a></code> state the method’s practical limits (small <code>n</code>, strongly correlated mediators, rare binary outcomes, overdispersed counts, missing data).</p>
+<p>POEMED answers the global question, <em>“is there any active mediator among many candidates?”</em>, and then names the mediators it selects. Reach for it when the candidate mediators number in the dozens or more (<code>p</code> may exceed <code>n</code>), the outcome is continuous, binary, or a count, and the individual mediation effects may differ in sign. For a single mediator, or a few mediators fit as one structural model (indirect effects with confidence intervals, likelihood ratio tests of arbitrary indirect effects, moderated mediation), use <a href="https://CRAN.R-project.org/package=DMAR" class="external-link">DMAR</a> instead. Among high-dimensional global tests, POEMED implements the power-enhanced tests of Yu and Kelley (in press) and the HDMM benchmark they extend; HILMA, GlobalTest, HDMT, and DACT are separate methods in their own packages. The vignette <code>poemed-vs-competitors</code> shows how to run HILMA and GlobalTest beside a POEMED fit and where to find HDMT and DACT. The guided-tour vignette and <code><a href="reference/pe_mediation.html">?pe_mediation</a></code> state the method’s practical limits (small <code>n</code>, strongly correlated mediators, rare binary outcomes, overdispersed counts, missing data).</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -86,7 +89,7 @@
 <p>POEMED imports <code>glmnet</code> and <code>ncvreg</code>; <code>knitr</code> and <code>rmarkdown</code> build the vignettes. After installing, <code>browseVignettes("POEMED")</code> opens the guides.</p>
 </div>
 <div class="section level2">
-<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+<h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/yelleKneK/POEMED" class="external-link">POEMED</a></span><span class="op">)</span></span>
@@ -98,14 +101,14 @@
 <span>                             pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1 <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># One call reports the benchmark Wald test and the power-enhanced test</span></span>
-<span><span class="co"># side by side, and names the active mediators it found.</span></span>
+<span><span class="co"># side by side, and names the mediators the screen selected.</span></span>
 <span><span class="fu"><a href="reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span><span class="op">)</span></span></code></pre></div>
-<p>The benchmark test (<code>pval_hdmm</code>) does not reject the (zero) total indirect effect; the power-enhanced test (<code>pval_pe</code>) rejects decisively and identifies an active mediator. The footer also reports the tuning parameter the high-dimensional BIC chose and the grid it was chosen from.</p>
+<p>The benchmark test (<code>pval_hdmm</code>) does not reject the (zero) total indirect effect; the power-enhanced test (<code>pval_pe</code>) rejects decisively and selects three of the four active mediators. The footer also reports the tuning parameter the high-dimensional BIC chose and the grid it was chosen from, <code>seq(0.05, 10, length.out = 100)</code> by default for every outcome type; the grid can be shortened to save time or extended when the value chosen sits at an end of it, which the fit warns about (see <code><a href="reference/pe_mediation.html">?pe_mediation</a></code>). Run as printed, this fit chooses 0.05, the smallest value, and warns; a grid extended below it and spaced more finely (<code>seq(0.01, 10, length.out = 200)</code>) chooses an interior value and selects the same three mediators.</p>
 </div>
 <div class="section level2">
-<h2 id="reproducing-the-article">Reproducing the article<a class="anchor" aria-label="anchor" href="#reproducing-the-article"></a>
+<h2 id="reproducing-the-article">Reproducing the Article<a class="anchor" aria-label="anchor" href="#reproducing-the-article"></a>
 </h2>
-<p>All data needed to reproduce the paper ship with the package; nothing is downloaded at run time. The vignette <strong><code>reproducing-the-article</code></strong> walks through every analysis section by section; the table below maps each article result to the function that reproduces it.</p>
+<p>All data needed to rerun the article’s analyses ship with the package; nothing is downloaded at run time. The vignette <strong><code>reproducing-the-article</code></strong> reruns the empirical analysis cell by cell and gives the calls that run the simulation designs; the table below maps each article result to the function that runs its analysis.</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -113,36 +116,36 @@
 </colgroup>
 <thead><tr>
 <th>Article result</th>
-<th>Reproduce with</th>
+<th>Function</th>
 </tr></thead>
 <tbody>
 <tr>
-<td>Section 4.1 linear-model size/power figures</td>
+<td>Section 4.1, Figure 3: linear-model size and power</td>
 <td><code>pe_power_curve(outcome = "continuous", pattern = "homogeneous" / "contrasting")</code></td>
 </tr>
 <tr>
-<td>Section 4.2 logistic / Poisson figures</td>
+<td>Section 4.2, Figures 4 and 5: logistic and Poisson size and power</td>
 <td>
 <code>pe_power_curve(outcome = "binary", c2 = 1)</code> and <code>pe_power_curve(outcome = "count", c2 = 0.4)</code>
 </td>
 </tr>
 <tr>
-<td>Supplement Section S.4.1: FWER/FDR mediator-identification study</td>
+<td>Supplement Section S.4.1, Tables S.1 to S.3: FWER/FDR mediator-identification study</td>
 <td><code><a href="reference/pe_identification_study.html">pe_identification_study()</a></code></td>
 </tr>
 <tr>
-<td>Supplement: real-data-motivated heterogeneous setting</td>
+<td>Supplement Section S.4.4: real-data-motivated heterogeneous setting</td>
 <td>
 <code><a href="reference/simulate_guo_mediation.html">simulate_guo_mediation()</a></code> with the shipped <code>guo_calibration</code> constants</td>
 </tr>
 <tr>
-<td>Section 5 real-data tables (IMR, U5MR, LEB, LBW, PoU)</td>
+<td>Section 5, Tables 1 (IMR) and 2 (PoU); supplement Tables S.10 (LEB), S.11 (U5MR), and S.12 (LBW)</td>
 <td>
-<code>WHO_mediation_analysis("imr")</code>, <code>"u5mr"</code>, <code>"leb"</code>, <code>"lbw"</code>, <code>"pou"</code>
+<code>WHO_mediation_analysis("imr")</code>, <code>"pou"</code>, <code>"leb"</code>, <code>"u5mr"</code>, <code>"lbw"</code>
 </td>
 </tr>
 <tr>
-<td>Supplement: extended tables (PE / PE-BH / PE-BY columns)</td>
+<td>Supplement Section S.5, Tables S.8 to S.12: PE, PE-BH, and PE-BY columns</td>
 <td><code>WHO_mediation_analysis(..., full_table = TRUE)</code></td>
 </tr>
 <tr>
@@ -152,9 +155,11 @@
 </tr>
 </tbody>
 </table>
-<p>The Monte Carlo figures use the article’s <code>n = 300</code>, <code>p = 500</code>, and 1,000 replications; the vignette runs reduced versions for speed and gives the exact article settings in <code>eval = FALSE</code> blocks. Set <code>cores &gt; 1</code> to parallelize (near-linear). The real-data tables are deterministic and are checked against the published values by the package’s test suite (<code>tests/testthat/test-benchmark.R</code>).</p>
+<p>The Monte Carlo studies use the article’s <code>n = 300</code>, <code>p = 500</code>, and 1,000 replications (the supplement’s real-data-motivated setting its case-study <code>n = 85</code> and <code>p = 1008</code>), and each panel takes hours, so the vignette does not rerun them; it gives the calls, on the grids of the article’s scripts where the article records one and on the package default grid for the real-data-motivated setting, with <code>cores &gt; 1</code> to parallelize (near-linear). The real-data analyses are deterministic: under its default tuning grid, <code><a href="reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> reproduces the selected mediators of Tables 1, 2, and S.8 to S.12 (every selected set but one BH set) and their benchmark p-values to the printed four decimals, apart from a few cells that differ in the fourth decimal or below 0.0001 and six cells it does not fit: four in which two indicators are exactly collinear and two in which the outcome is constant. The reproduction vignette names those six cells and shows how to fit them by hand. The package’s test suite pins every global, region, and income row of Tables 1 and 2 (<code>tests/testthat/test-benchmark.R</code>) and checks every populated cell of Tables 1, 2, and S.8 to S.12 against the printed values (<code>tests/testthat/test-who_article_tables.R</code>).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Reproduce the article's infant-mortality table (Table 1).</span></span>
+<code class="sourceCode R"><span><span class="co"># The global, region, and income models of the article's infant-mortality</span></span>
+<span><span class="co"># analysis (Table 1); add "region_income" to groupings for the</span></span>
+<span><span class="co"># region-by-income cells.</span></span>
 <span><span class="fu"><a href="reference/WHO_mediation_analysis.html">WHO_mediation_analysis</a></span><span class="op">(</span><span class="st">"imr"</span>, groupings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"global"</span>, <span class="st">"region"</span>, <span class="st">"income"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -166,13 +171,13 @@
 <li>
 <strong><code>POEMED</code></strong>: a guided tour of the method and the package.</li>
 <li>
-<strong><code>reproducing-the-article</code></strong>: section-by-section reproduction.</li>
+<strong><code>reproducing-the-article</code></strong>: the empirical analysis rerun cell by cell, and the calls for the simulation designs.</li>
 <li>
 <strong><code>poemed-vs-competitors</code></strong>: a head-to-head against the benchmark test.</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="main-functions">Main functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
+<h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -202,7 +207,7 @@
 <td>
 <code><a href="reference/pe_mediators.html">pe_mediators()</a></code> / <code><a href="reference/pe_selection.html">pe_selection()</a></code>
 </td>
-<td>Per-mediator screen detail; PE statistic and active set per multiplicity method</td>
+<td>Per-mediator screen detail; PE statistic and selected set per multiplicity method</td>
 </tr>
 <tr>
 <td>
@@ -242,7 +247,7 @@
 </tr>
 </tbody>
 </table>
-<p>Every test reports the benchmark Wald test and the power-enhanced test side by side, plus a confidence interval for the total indirect effect; <code>report_all_methods = TRUE</code> adds the active set and PE p-value under all three multiplicity methods, <code>drop_constant = TRUE</code> tolerates zero-variance mediators, and <code>cores</code> parallelizes the Monte Carlo and benchmark routines.</p>
+<p>Every test reports the benchmark Wald test and the power-enhanced test side by side, plus the estimated total indirect effect. No confidence interval is reported: the article reports none, and the Wald interval built on the penalized estimate under-covers in finite samples. <code>report_all_methods = TRUE</code> adds the selected set and PE p-value under all three multiplicity methods, <code>drop_constant = TRUE</code> tolerates zero-variance mediators, and <code>cores</code> parallelizes the Monte Carlo and benchmark routines.</p>
 </div>
 <div class="section level2">
 <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
@@ -262,7 +267,7 @@
 <h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
 </h2>
 <p>Yu, X., &amp; Kelley, K. (in press). Power Enhancement in High-Dimensional Heterogeneous Mediation Analysis. <em>Journal of the American Statistical Association</em>.</p>
-<p>Run <code>citation("POEMED")</code> for the BibTeX entry.</p>
+<p>If you use POEMED in published work, please cite the article. Run <code>citation("POEMED")</code> for the BibTeX entry.</p>
 </div>
 <div class="section level2">
 <h2 id="authors">Authors<a class="anchor" aria-label="anchor" href="#authors"></a>

@@ -1,10 +1,14 @@
-# Codebook for the WHO health-expenditure indicators
+# Codebook for the WHO Health-Expenditure Indicators
 
 The 57 health-expenditure indicators that serve as candidate mediators
 in
 [WHO_health_mediation](https://yelleknek.github.io/POEMED/reference/WHO_health_mediation.md),
-with their short codes and full descriptions, transcribed from the
-article's supplementary codebook. Many indicators are alternative
+with their short codes and descriptions. The codes and their order are
+those of Table S.7 in the supplement to Yu and Kelley (in press); the
+descriptions are adapted from that table rather than copied,
+abbreviating some spelled-out denominators (for example "as % of GDP"
+for "as % of Gross Domestic Product (GDP)" and "as % of CHE" for "as %
+of Current Health Expenditure (CHE)"). Many indicators are alternative
 normalizations of the same underlying spending (per capita, percent of
 GDP, percent of current health expenditure, current versus constant 2021
 currency, national currency versus US dollars versus purchasing power
@@ -37,9 +41,16 @@ A `data.frame` with 57 rows and 2 columns:
 
 ## Source
 
-The article's supplementary "List of Health Spending Indicators and the
-Associated Indicator Code" table; underlying definitions from the WHO
-Global Health Expenditure Database.
+Adapted from Table S.7 ("A List of Health Spending Indicators and the
+Associated Indicator Code used in Real Data Analysis") of the supplement
+to Yu and Kelley (in press); underlying definitions from the WHO Global
+Health Expenditure Database.
+
+## References
+
+Yu, X., & Kelley, K. (in press). Power Enhancement in High-Dimensional
+Heterogeneous Mediation Analysis. *Journal of the American Statistical
+Association*.
 
 ## See also
 

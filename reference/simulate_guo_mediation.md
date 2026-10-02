@@ -1,4 +1,4 @@
-# Simulate the real-data-motivated heterogeneous mediation setting
+# Simulate the Real-Data-Motivated Heterogeneous Mediation Setting
 
 Generates a linear mediation data set from the article's
 *real-data-motivated* heterogeneous setting, whose coefficients are
@@ -10,10 +10,10 @@ positive and negative** effects that neither all agree in sign
 (homogeneous) nor exactly cancel (contrasting): the messy middle ground
 that real data tends to present. The calibration constants are the
 [guo_calibration](https://yelleknek.github.io/POEMED/reference/guo_calibration.md)
-object; the total indirect effect is `guo_calibration$beta_per_c1`
-\\\times c_1 \approx -1.597\\c_1\\. (The article reports
-\\-1.5977\\c_1\\, from the full-precision Guo coefficients; the values
-shipped here are those coefficients rounded to three decimals.)
+object; the total indirect effect is `guo_calibration$beta_per_c1` times
+\\c_1\\, about \\-1.597 c_1\\. (The article reports \\-1.5977 c_1\\,
+from the full-precision Guo coefficients; the values shipped here are
+those coefficients rounded to three decimals.)
 
 ## Usage
 
@@ -33,37 +33,42 @@ simulate_guo_mediation(
 - c1:
 
   Signal-strength scale for the exposure-mediator coefficients
-  (`Gamma_x = c1 * Gamma_x_G`). At `c1 = 0` there is no mediation (the
-  Type I error setting); the article sweeps `c1` over
-  `c(0, +/- 0.1, ..., +/- 1)`.
+  (`Gamma_x = c1 * Gamma_x_G`), a single finite number. At `c1 = 0`
+  there is no mediation (the Type I error setting); the article sweeps
+  `c1` over `c(0, +/- 0.1, ..., +/- 1)`.
 
 - c2:
 
-  Direct effect (exposure-outcome coefficient). Default 0.5.
+  Direct effect (exposure-outcome coefficient), a single finite number.
+  Default 0.5.
 
 - confounders:
 
-  Logical; if `TRUE`, include the calibrated confounders in the
-  data-generating process (the article's "with confounders" scenario).
-  Default `FALSE`.
+  `TRUE` or `FALSE`; if `TRUE`, include the calibrated confounders in
+  the data-generating process (the article's "with confounders"
+  scenario). Default `FALSE`.
 
 - alpha_m:
 
   Outcome-mediator coefficients at the eleven active loci: either a
-  numeric vector of length 11, or one of the strings `"setting0"` (the
-  default `(1, 0.9, 0.8, -0.9, -0.8, -0.7, 0.6, 0.5, 0.4, 0.3, 0.2)`),
-  `"homogeneous_like"`, or `"contrasting_like"` (the two alternative
-  sets the article also studies, which remain heterogeneous because they
-  are paired with the scattered `Gamma_x`).
+  numeric vector of 11 finite values, or one of the strings `"setting0"`
+  (the default, the values 1, 0.9, 0.8, -0.9, -0.8, -0.7, 0.6, 0.5, 0.4,
+  0.3, and 0.2), `"homogeneous_like"`, or `"contrasting_like"` (the two
+  alternative sets the article also studies, which remain heterogeneous
+  because they are paired with the scattered `Gamma_x`).
 
 - n:
 
-  Number of observations. Default the case-study size, 85.
+  Number of observations, a single whole number of at least 2. Default
+  `NULL`, the case-study size, 85.
 
 - seed:
 
-  Optional integer seed, set locally with the caller's random number
-  generator state restored on exit.
+  Optional integer seed. When supplied it is set for the duration of the
+  call and the caller's random number generator state is restored on
+  exit. `NULL` (the default) sets no seed: the draws come from the
+  session's random number stream, which the call advances as any random
+  function does.
 
 ## Value
 
@@ -72,7 +77,9 @@ A list with the same shape as
 the exposure `X` (`n` by 1), mediators `M` (`n` by 1008), outcome `Y`,
 confounders `Z` (`n` by 8, or `NULL`), the full coefficient vectors
 `alpha_m` and `Gamma_x`, the total indirect effect `beta`, the
-`active_mediators` (the eleven loci, or none when `c1 = 0`), and the
+`active_mediators` (the loci nonzero in both paths: all eleven under the
+default `alpha_m`, the first five under `"homogeneous_like"`, the first
+four under `"contrasting_like"`, and none when `c1 = 0`), and the
 dimensions.
 
 ## Details
@@ -81,12 +88,14 @@ The mediator dimension (\\p = 1008\\), the eleven active loci, and the
 coefficient vectors come from Guo et al. (2022) and are fixed. The
 exposure and confounders, which the article took from the actual
 case-study data, are simulated here (standard normal) so the function is
-self-contained; the scientifically relevant calibration, the mediator
-and outcome coefficients, is exact.
+self-contained. The mediator and outcome coefficients, the part of the
+calibration that matters scientifically, are the values printed in the
+supplement of Yu and Kelley (in press), where the Guo estimates appear
+to three decimals.
 
 ## References
 
-Yu, X., and Kelley, K. (in press). Power Enhancement in High-Dimensional
+Yu, X., & Kelley, K. (in press). Power Enhancement in High-Dimensional
 Heterogeneous Mediation Analysis. *Journal of the American Statistical
 Association*.
 
@@ -127,20 +136,21 @@ d$active_mediators     # the 11 active loci
 #>  [1]  1  2  3  4  5  6  7  8  9 10 11
 round(d$beta, 4)       # beta_per_c1 * 0.5, i.e. -0.7985
 #> [1] -0.7985
-# At the case study's n = 85 the signal is faint for either test. With
-# n = 150 and a wider tuning grid (the guided tour's setting) both tests
-# reject the global null, and the power-enhanced test additionally
-# identifies several of the eleven active loci.
+# At the case study's n = 85 and c1 = 0.5 the signal is faint for either
+# test. With c1 = 1 and n = 150 both tests reject the global null, and the
+# power-enhanced test also selects seven of the eleven active loci. The
+# fit searches a 20-value grid to keep the example fast; the default grid
+# selects the same seven loci and takes five times as long.
 d2 <- simulate_guo_mediation(c1 = 1, n = 150, seed = 113)
 fit <- pe_mediation(d2$X, d2$Y, d2$M, outcome = "continuous",
-                    lambda_grid = seq(0.1, 10, length.out = 50))
-fit[fit$term %in% c("pval_hdmm", "pval_pe", "n_active_mediators"), ]
-#>  term               value   
-#>  pval_hdmm          < 0.0001
-#>  pval_pe            < 0.0001
-#>  n_active_mediators 6       
+                    lambda_grid = seq(0.05, 2, length.out = 20))
+fit[fit$term %in% c("pval_hdmm", "pval_pe", "n_selected_mediators"), ]
+#>  term                 value   
+#>  pval_hdmm            < 0.0001
+#>  pval_pe              < 0.0001
+#>  n_selected_mediators 7       
 #> 
 #> Outcome model: continuous (linear)
-#> Active mediators identified (6): 1, 4, 5, 6, 9, 10
-#> Tuning parameter (HBIC): lambda = 0.1 from 50 values in [0.1, 10] (the grid's lower end)
+#> Selected mediators (7): 1, 4, 5, 6, 9, 10, 11
+#> Tuning parameter (HBIC): lambda = 0.153 from 20 values in [0.05, 2]
 ```

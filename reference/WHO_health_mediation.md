@@ -1,8 +1,8 @@
-# WHO / World Bank health-expenditure mediation data (benchmark data set)
+# WHO / World Bank Health-Expenditure Mediation Data (Benchmark Data Set)
 
 A benchmark data set for high-dimensional mediation methods: the World
-Health Organization (WHO) and World Bank panel analyzed in the source
-article. It is a country-by-year panel used to ask how health-care
+Health Organization (WHO) and World Bank panel analyzed in Yu and Kelley
+(in press). It is a country-by-year panel used to ask how health-care
 expenditure mediates the relationship between economic growth and
 population health outcomes. The exposure is economic growth, the
 candidate mediators are 57 health-expenditure indicators, and five
@@ -40,9 +40,10 @@ states times the years 2000–2021) and 68 columns:
 
 - income:
 
-  World Bank income group, a factor ordered low to high: `Low` (16
-  members), `Lower-middle` (27), `Upper-middle` (26), `High` (22). The
-  article abbreviates these Low, LM, UM, High.
+  World Bank income group, a factor (not an ordered one) whose levels
+  run from low to high: `Low` (16 members), `Lower-middle` (27),
+  `Upper-middle` (26), `High` (22). The article abbreviates these Low,
+  LM, UM, High.
 
 - year:
 
@@ -85,22 +86,38 @@ states times the years 2000–2021) and 68 columns:
 
 ## Source
 
-Exposure and health outcomes: World Bank Open Data
-(<https://data.worldbank.org/>). Health-expenditure mediators and the
-region / income labels: WHO Global Health Expenditure Database
-(<https://apps.who.int/nha/database>). Merged and filtered for the
-article; see `data-raw/WHO_health_mediation.R` in the package sources.
+Exposure and health outcomes: World Bank Open Data, World Development
+Indicators (<https://data.worldbank.org/>), licensed by the World Bank
+under the Creative Commons Attribution 4.0 International license (CC BY
+4.0, <https://datacatalog.worldbank.org/public-licenses>), which permits
+redistribution and adaptation with attribution and a note of the changes
+made. Health-expenditure mediators and the region and income labels:
+World Health Organization, Global Health Expenditure Database
+(<https://apps.who.int/nha/database>), made available under WHO's terms
+and conditions for the use of its data
+(<https://www.who.int/about/policies/publishing/data-policy/terms-and-conditions>):
+non-commercial use for public health purposes, with attribution to WHO
+and to the countries that provided the underlying data, and no
+suggestion that WHO endorses any product or service. Attribution: World
+Health Organization, Global Health Expenditure Database, accessed
+November 2024; World Bank, World Development Indicators, accessed
+November 2024. Changes made: the two sources were merged by country and
+year, restricted to the 91 WHO member states with complete
+health-expenditure data for 2000 to 2021, and the outcome series were
+attached; no value was altered. The script that builds the data set,
+`data-raw/WHO_health_mediation.R`, is in the package's GitHub repository
+(<https://github.com/yelleKneK/POEMED>), not in the package itself. The
+package's `LICENSE.note` file restates these terms.
 
 ## Details
 
 It is shipped as a benchmark so that a method, old or new, can be
-evaluated on a real, published high-dimensional mediation problem with a
-known set of findings (see
+evaluated on a real, published high-dimensional mediation problem (see
 [`WHO_mediation_analysis()`](https://yelleknek.github.io/POEMED/reference/WHO_mediation_analysis.md),
-whose output is the benchmark fit). The World Health Organization (WHO)
-is the source of the health-expenditure mediators and the region and
-income labels; the World Bank is the source of the economic-growth
-exposure and the health outcomes.
+whose output is the package's benchmark fit). The World Health
+Organization (WHO) is the source of the health-expenditure mediators and
+the region and income labels; the World Bank is the source of the
+economic-growth exposure and the health outcomes.
 
 Three of the five health outcomes (`imr`, `u5mr`, `leb`) cover all 91
 members for 2000–2021; `lbw` and `pou` have narrower coverage, so they
@@ -118,6 +135,12 @@ a given outcome (and optionally a region or income subset) ready for
 [`pe_mediation()`](https://yelleknek.github.io/POEMED/reference/pe_mediation.md).
 In the article's global model the confounders are the region, income
 group, and year.
+
+## References
+
+Yu, X., & Kelley, K. (in press). Power Enhancement in High-Dimensional
+Heterogeneous Mediation Analysis. *Journal of the American Statistical
+Association*.
 
 ## See also
 
@@ -143,25 +166,28 @@ table(WHO_health_mediation$region[WHO_health_mediation$year == 2010])
 #>   32   28    8    9    5    9 
 
 # A first test on the global infant-mortality design with the package
-# defaults. WHO_mediation_analysis() applies the article's exact
-# preprocessing and tuning grid and reproduces its table.
+# defaults, which standardize X, M, and Z and center Y.
+# WHO_mediation_analysis() instead applies the preprocessing and the
+# tuning grid behind the article's tables, which leaves the
+# confounders unscaled (see ?WHO_mediation_design for the difference).
+# HBIC chooses 0.05, the smallest value of the default grid, so this fit
+# warns; WHO_mediation_analysis() searches the article's grid instead.
 des <- WHO_mediation_design("imr")
 pe_mediation(des$X, des$Y, des$M, Z = des$Z, outcome = "continuous")
-#>  term                  value   
-#>  stat_hdmm             0.7396  
-#>  pval_hdmm             0.3898  
-#>  stat_pe               205.4   
-#>  j_pe                  204.7   
-#>  pval_pe               < 0.0001
-#>  total_indirect_effect 0.1489  
-#>  total_indirect_lower  -0.1905 
-#>  total_indirect_upper  0.4884  
-#>  n_active_mediators    2       
-#>  df                    1       
-#>  n_candidate_mediators 57      
-#>  n_observations        2002    
+#> Warning: HBIC selected lambda = 0.05, the smallest value of `lambda_grid`, for the full model and the reduced model of the benchmark test. The criterion is minimized over the grid alone, so its minimum may lie beyond that end or between the end and its neighbor. Consider extending the grid past it and using a finer partition (more values), and compare the selected mediators and p-values across grids.
+#>  term                  value    
+#>  stat_hdmm             8.966e-06
+#>  pval_hdmm             0.9976   
+#>  stat_pe               238.6    
+#>  j_pe                  238.6    
+#>  pval_pe               < 0.0001 
+#>  total_indirect_effect 0.0005369
+#>  n_selected_mediators  2        
+#>  df                    1        
+#>  n_candidate_mediators 57       
+#>  n_observations        2002     
 #> 
 #> Outcome model: continuous (linear)
-#> Active mediators identified (2): gge_gdp, ext_usd2021
-#> Tuning parameter (HBIC): lambda = 0.0656 from 20 values in [0.0624, 0.122]
+#> Selected mediators (2): gge_gdp, ext_usd2021
+#> Tuning parameter (HBIC): lambda = 0.05 from 100 values in [0.05, 10] (the grid's lower end)
 ```

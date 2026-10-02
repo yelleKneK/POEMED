@@ -1,4 +1,4 @@
-# Autoregressive (AR(1)) covariance matrix for mediator simulation
+# Autoregressive (AR(1)) Covariance Matrix for Mediator Simulation
 
 Builds the \\p \times p\\ first-order autoregressive covariance matrix
 \\\Sigma = (\rho^{\|i-j\|})\_{i,j}\\, the intercorrelation structure

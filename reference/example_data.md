@@ -1,4 +1,4 @@
-# Example high-dimensional mediation data sets
+# Example High-Dimensional Mediation Data Sets
 
 Three small simulated data sets, one per outcome type, for trying the
 POEMED tests and reproducing the help-page examples. Each was generated
@@ -7,6 +7,14 @@ by
 under a homogeneous mediation pattern (a few same-sign active mediators
 among many null ones) with three confounders, at seed 113, so the
 generating truth is known and travels with the data.
+
+## Usage
+
+``` r
+example_continuous
+example_binary
+example_count
+```
 
 ## Format
 
@@ -73,20 +81,18 @@ fit <- pe_mediation(example_continuous$X, example_continuous$Y,
                     outcome = "continuous")
 fit
 #>  term                  value   
-#>  stat_hdmm             3.289   
-#>  pval_hdmm             0.0698  
-#>  stat_pe               327     
-#>  j_pe                  323.7   
+#>  stat_hdmm             4.024   
+#>  pval_hdmm             0.0449  
+#>  stat_pe               457.1   
+#>  j_pe                  453.1   
 #>  pval_pe               < 0.0001
-#>  total_indirect_effect 0.2513  
-#>  total_indirect_lower  -0.0203 
-#>  total_indirect_upper  0.5229  
-#>  n_active_mediators    1       
+#>  total_indirect_effect 0.2804  
+#>  n_selected_mediators  2       
 #>  df                    1       
 #>  n_candidate_mediators 100     
 #>  n_observations        200     
 #> 
 #> Outcome model: continuous (linear)
-#> Active mediators identified (1): 4
-#> Tuning parameter (HBIC): lambda = 0.211 from 20 values in [0.211, 0.411] (the grid's lower end)
+#> Selected mediators (2): 4, 5
+#> Tuning parameter (HBIC): lambda = 0.151 from 100 values in [0.05, 10]
 ```

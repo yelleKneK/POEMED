@@ -6,7 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Power Enhancement for High-Dimensional Mediation: A Guided Tour • POEMED</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- katex math --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -34,7 +35,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="../articles/reproducing-the-article.html">Reproducing the Article's Analyses With POEMED</a></li>
+    <li><a class="dropdown-item" href="../articles/poemed-vs-competitors.html">POEMED and the Competition: A Head-to-Head</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
@@ -70,11 +73,12 @@
 regression but new to high-dimensional mediation. It explains the
 problem the package solves, builds up the idea behind the power-enhanced
 tests, then walks through a first analysis, the output, the different
-outcome types, a simulation study, and finally the real data application
-from the article. You do not need to have read the article first;
-pointers to it appear where the details live.</p>
+outcome types, a simulation study, and finally the real-data application
+from the article that introduced the tests, Yu and Kelley (in press).
+You do not need to have read the article first; pointers to it appear
+where the details live.</p>
 <div class="section level2">
-<h2 id="what-is-a-mediation-analysis">1. What is a mediation analysis?<a class="anchor" aria-label="anchor" href="#what-is-a-mediation-analysis"></a>
+<h2 id="what-is-a-mediation-analysis">1. What Is a Mediation Analysis?<a class="anchor" aria-label="anchor" href="#what-is-a-mediation-analysis"></a>
 </h2>
 <p>A mediation analysis asks <em>how</em> an exposure affects an
 outcome. Instead of only asking whether a treatment <code>X</code>
@@ -107,7 +111,7 @@ candidate mediators?</p>
 built to perform with high power.</p>
 </div>
 <div class="section level2">
-<h2 id="the-problem-total-indirect-effect-tests-have-a-blind-spot">2. The problem: total-indirect-effect tests have a blind spot<a class="anchor" aria-label="anchor" href="#the-problem-total-indirect-effect-tests-have-a-blind-spot"></a>
+<h2 id="the-problem-total-indirect-effect-tests-have-a-blind-spot">2. The Problem: Total-Indirect-Effect Tests Have a Blind Spot<a class="anchor" aria-label="anchor" href="#the-problem-total-indirect-effect-tests-have-a-blind-spot"></a>
 </h2>
 <p>With many mediators, the conventional approach summarizes them by the
 <strong>total indirect effect</strong>, written <code>beta</code>: the
@@ -130,41 +134,58 @@ out as the core limitation of existing high-dimensional mediation
 tests.</p>
 </div>
 <div class="section level2">
-<h2 id="the-idea-a-power-enhancement-component">3. The idea: a power enhancement component<a class="anchor" aria-label="anchor" href="#the-idea-a-power-enhancement-component"></a>
+<h2 id="the-idea-a-power-enhancement-component">3. The Idea: A Power Enhancement Component<a class="anchor" aria-label="anchor" href="#the-idea-a-power-enhancement-component"></a>
 </h2>
 <p>The power-enhanced (PE) test fixes the blind spot by adding a second
-piece that cannot cancel. After a penalized fit selects a small set of
-candidate-active mediators, the PE component <code>J_m</code> adds up,
+piece that cannot cancel. After a penalized fit narrows the candidates
+to a small set of mediators, the PE component <code>J_m</code> adds up,
 over those mediators, the <strong>magnitude</strong> of each one’s
 combined path signal. In code notation, with <code>alpha_hat[j]</code>
 the estimated <code>M -&gt; Y</code> coefficient of mediator
 <code>j</code>, <code>Gamma_hat[i, j]</code> the estimated
-<code>X -&gt; M</code> coefficient from exposure <code>i</code>, and
-<code>se_*</code> their standard errors:</p>
+<code>X -&gt; M</code> coefficient from exposure <code>i</code>,
+<code>se_*</code> their standard errors, and <code>p_alpha[j]</code> and
+<code>p_Gamma[i, j]</code> the two paths’ p-values:</p>
 <pre><code>J_m = sqrt(p) * sum over exposures i and selected mediators j of
       |alpha_hat[j] / se_alpha[j]| * |Gamma_hat[i, j] / se_Gamma[i, j]|
-      * 1{both paths individually significant}</code></pre>
+      * 1{max(p_alpha[j], p_Gamma[i, j])
+            &lt;= error_level / (s * q * log(log(n)))}</code></pre>
+<p>Here <code>s</code> is the number of mediators the penalized fit
+selected, <code>q</code> the number of exposures, and <code>n</code> the
+sample size. This is the default Bonferroni screen; the
+<code>"BH"</code> and <code>"BY"</code> methods of Section 6 compare
+adjusted p-values with <code>error_level / log(log(n))</code>
+instead.</p>
 <p>Two things matter here. First, the indicator keeps a mediator only
 when <strong>both</strong> its <code>X -&gt; M</code> path and its
-<code>M -&gt; Y</code> path are individually significant, so noise
-mediators do not contribute. Second, because <code>J_m</code> sums
-<strong>absolute values</strong>, a <code>+0.5</code> mediator and a
-<code>-0.5</code> mediator <em>reinforce</em> each other instead of
-cancelling. The full test statistic is <code>M_PE = S_n + J_m</code>,
-the benchmark Wald statistic <code>S_n</code> (the total-indirect-effect
+<code>M -&gt; Y</code> path pass that strict, multiplicity-adjusted
+threshold, so noise mediators do not contribute. The threshold is set by
+<code>error_level</code> (default 0.05), the error rate targeted for the
+identified mediators, so it shapes the global test as well (Section 6
+shows how). Second, because <code>J_m</code> sums <strong>absolute
+values</strong>, a <code>+0.5</code> mediator and a <code>-0.5</code>
+mediator <em>reinforce</em> each other instead of canceling.</p>
+<p>The full test statistic is <code>M_PE = S_n + J_m</code>, the
+benchmark Wald statistic <code>S_n</code> (the total-indirect-effect
 test) plus the enhancement. Under the global null of no mediation, the
-screen rejects every mediator, so <code>J_m = 0</code> and
-<code>M_PE</code> behaves exactly like <code>S_n</code> (same chi-square
-reference distribution, so the same Type I error rate). Under
+screen keeps no mediator with probability tending to one as
+<code>n</code> grows, so <code>J_m = 0</code> and <code>M_PE</code> has
+the same chi-square reference distribution as <code>S_n</code>
+asymptotically. In a finite sample <code>J_m</code> is occasionally
+positive under the null, and because <code>M_PE</code> is never smaller
+than <code>S_n</code>, the PE test then rejects a little more often than
+the benchmark (the simulation in Section 8 shows this). Under
 heterogeneous alternatives, <code>J_m</code> grows large and the test
-gains power. That is the whole idea: <strong>keep the size, add power
-exactly where the old test was blind.</strong></p>
+gains power. That is the whole idea: <strong>keep the size in large
+samples, and add power where the old test is blind.</strong></p>
 <p>The same indicator that builds <code>J_m</code> also tells you
-<em>which</em> mediators are active, with familywise error rate control
-(the default) or false discovery rate control.</p>
+<em>which</em> mediators are active, targeting the familywise error rate
+(the default) or the false discovery rate. The tuning grid of the
+penalized fit shapes both the global test and the selected set; Sections
+4, 8, and 11 say how to read it and how to tune it.</p>
 </div>
 <div class="section level2">
-<h2 id="a-first-analysis-step-by-step">4. A first analysis, step by step<a class="anchor" aria-label="anchor" href="#a-first-analysis-step-by-step"></a>
+<h2 id="a-first-analysis-step-by-step">4. A First Analysis, Step by Step<a class="anchor" aria-label="anchor" href="#a-first-analysis-step-by-step"></a>
 </h2>
 <p>The package can simulate data so you can see the method work before
 bringing your own. <code><a href="../reference/simulate_mediation_data.html">simulate_mediation_data()</a></code> generates the
@@ -187,40 +208,67 @@ exposure, outcome, mediators, and (optionally) confounders:</p>
 <span><span class="va">d</span><span class="op">$</span><span class="va">active_mediators</span>   <span class="co"># which mediators are truly active (the ground truth)</span></span>
 <span><span class="co">#&gt; [1] 1 2 3 4</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">beta</span>               <span class="co"># the total indirect effect: zero, by construction</span></span>
-<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -6.661338e-18</span></span></code></pre></div>
 <p>So four mediators are genuinely active, but the total indirect effect
 is zero because their effects cancel. This is precisely the situation
 that defeats a total-indirect-effect test. Now run the global test:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: HBIC selected lambda = 0.05, the smallest value of `lambda_grid`, for</span></span>
+<span><span class="co">#&gt; the full model and the reduced model of the benchmark test. The criterion is</span></span>
+<span><span class="co">#&gt; minimized over the grid alone, so its minimum may lie beyond that end or</span></span>
+<span><span class="co">#&gt; between the end and its neighbor. Consider extending the grid past it and using</span></span>
+<span><span class="co">#&gt; a finer partition (more values), and compare the selected mediators and</span></span>
+<span><span class="co">#&gt; p-values across grids.</span></span>
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt;  term                  value   </span></span>
-<span><span class="co">#&gt;  stat_hdmm             0.03881 </span></span>
-<span><span class="co">#&gt;  pval_hdmm             0.8438  </span></span>
-<span><span class="co">#&gt;  stat_pe               174.2   </span></span>
-<span><span class="co">#&gt;  j_pe                  174.1   </span></span>
+<span><span class="co">#&gt;  stat_hdmm             1.302   </span></span>
+<span><span class="co">#&gt;  pval_hdmm             0.2538  </span></span>
+<span><span class="co">#&gt;  stat_pe               865.5   </span></span>
+<span><span class="co">#&gt;  j_pe                  864.2   </span></span>
 <span><span class="co">#&gt;  pval_pe               &lt; 0.0001</span></span>
-<span><span class="co">#&gt;  total_indirect_effect 0.01054 </span></span>
-<span><span class="co">#&gt;  total_indirect_lower  -0.0943 </span></span>
-<span><span class="co">#&gt;  total_indirect_upper  0.1154  </span></span>
-<span><span class="co">#&gt;  n_active_mediators    1       </span></span>
+<span><span class="co">#&gt;  total_indirect_effect -0.08396</span></span>
+<span><span class="co">#&gt;  n_selected_mediators  3       </span></span>
 <span><span class="co">#&gt;  df                    1       </span></span>
 <span><span class="co">#&gt;  n_candidate_mediators 60      </span></span>
 <span><span class="co">#&gt;  n_observations        200     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Outcome model: continuous (linear)</span></span>
-<span><span class="co">#&gt; Active mediators identified (1): 2</span></span>
-<span><span class="co">#&gt; Tuning parameter (HBIC): lambda = 0.199 from 20 values in [0.199, 0.388] (the grid's lower end)</span></span></code></pre></div>
+<span><span class="co">#&gt; Selected mediators (3): 2, 3, 4</span></span>
+<span><span class="co">#&gt; Tuning parameter (HBIC): lambda = 0.05 from 100 values in [0.05, 10] (the grid's lower end)</span></span></code></pre></div>
 <p>Read the two p-values. <code>pval_hdmm</code> is the benchmark Wald
 test on the total indirect effect; it is large, so that test fails to
 detect any mediation (exactly the blind spot from Section 2).
 <code>pval_pe</code> is the power-enhanced test; it is essentially zero,
-so it detects the mediation decisively. The footer lists the individual
-mediators it flagged as active. The power enhancement, made
-concrete.</p>
+so it detects the mediation decisively. The footer lists the mediators
+the screen selected, here three of the four truly active mediators. The
+power enhancement, made concrete.</p>
+<p>The last footer line reports the tuning parameter <code>lambda</code>
+that the high-dimensional BIC (HBIC) chose for the penalized fit and the
+grid it searched: by default 100 values from 0.05 to 10, the same grid
+for every outcome type. HBIC is minimized over the grid alone, so
+whatever grid is offered, the value chosen is the best of the values
+offered. Here the smallest value won. The footer says so, and the fit
+warned, because a minimum at an end of the grid may lie beyond that end
+or between it and its neighbor; a grid that extends further, or is
+spaced more finely, is worth a look whenever that happens. Doing that
+here moves the chosen value inside the grid and leaves the selected
+mediators unchanged:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">finer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
+<span>                      lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">10</span>, length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">finer</span>, <span class="st">"tuning"</span><span class="op">)</span><span class="op">$</span><span class="va">lambda_selected</span></span>
+<span><span class="co">#&gt; [1] 0.06020101</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">finer</span>, <span class="st">"selected_mediators"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2 3 4</span></span></code></pre></div>
+<p>The grid can be tuned the other way as well: fewer values, or a range
+narrowed to where the HBIC minimum has been seen to fall, make each fit
+faster, which matters when many fits are run (Section 8 does this for a
+simulation study). The chunks below fit on the default grid, and each
+would repeat the warning above; it is not shown again.</p>
 </div>
 <div class="section level2">
-<h2 id="reading-the-result-table">5. Reading the result table<a class="anchor" aria-label="anchor" href="#reading-the-result-table"></a>
+<h2 id="reading-the-result-table">5. Reading the Result Table<a class="anchor" aria-label="anchor" href="#reading-the-result-table"></a>
 </h2>
 <p>Every POEMED test returns a tidy table that prints with sensible
 rounding (whole numbers without decimals, p-values to four places) while
@@ -259,8 +307,8 @@ to <code>S_n</code>)</td>
 </td>
 </tr>
 <tr class="odd">
-<td><code>n_active_mediators</code></td>
-<td>how many individual mediators were identified as active</td>
+<td><code>n_selected_mediators</code></td>
+<td>how many individual mediators the screen selected</td>
 </tr>
 <tr class="even">
 <td><code>df</code></td>
@@ -277,41 +325,71 @@ exposures)</td>
 </tr>
 </tbody>
 </table>
+<p>The table gives a point estimate of <code>beta</code> but no
+confidence interval, and the article reports none. In simulations, a
+Wald interval built on the penalized estimate fell short of its nominal
+coverage, most clearly for binary and count outcomes, so the package
+does not report one.</p>
 <p>To pull a number out, index the table like any data frame; the stored
 value keeps full precision even though the display rounds:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">fit</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_pe"</span><span class="op">]</span>            <span class="co"># the exact p-value</span></span>
-<span><span class="co">#&gt; [1] 9.154634e-40</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"active_mediators"</span><span class="op">)</span>               <span class="co"># the active mediator indices</span></span>
-<span><span class="co">#&gt; [1] 2</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 3.135368e-190</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"selected_mediators"</span><span class="op">)</span>             <span class="co"># the selected mediator indices</span></span>
+<span><span class="co">#&gt; [1] 2 3 4</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="identifying-which-mediators-are-active">6. Identifying which mediators are active<a class="anchor" aria-label="anchor" href="#identifying-which-mediators-are-active"></a>
+<h2 id="identifying-which-mediators-are-active">6. Identifying Which Mediators Are Active<a class="anchor" aria-label="anchor" href="#identifying-which-mediators-are-active"></a>
 </h2>
-<p>The active set is controlled by the <code>method</code> argument. The
-default, <code>"Bonferroni"</code>, controls the familywise error rate:
-it is conservative, so when it flags a mediator you can be confident,
-but it may miss weak ones. The <code>"BH"</code> and <code>"BY"</code>
+<p>The selected set is controlled by the <code>method</code> argument.
+The default, <code>"Bonferroni"</code>, targets the familywise error
+rate and is the most conservative of the three, so it may miss weak
+mediators. Its control of that rate is asymptotic: in finite samples the
+rate also depends on the design and on the tuning grid, since a grid
+that reaches small values of <code>lambda</code> lets more candidates
+into the penalized fit. The <code>"BH"</code> and <code>"BY"</code>
 options control the false discovery rate instead and typically recover
 more mediators.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">des_idx</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">f</span>, <span class="st">"active_mediators"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">des_idx</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">f</span>, <span class="st">"selected_mediators"</span><span class="op">)</span></span>
 <span><span class="fu">des_idx</span><span class="op">(</span><span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>, method <span class="op">=</span> <span class="st">"Bonferroni"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2</span></span>
+<span><span class="co">#&gt; [1] 2 3 4</span></span>
 <span><span class="fu">des_idx</span><span class="op">(</span><span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>, method <span class="op">=</span> <span class="st">"BH"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2</span></span></code></pre></div>
-<p>The target error rate is <code>error_level</code> (default 0.05). It
-is distinct from the significance level you use to read
-<code>pval_pe</code>; the global test is insensitive to it.</p>
+<span><span class="co">#&gt; [1]  2  3  4 33</span></span></code></pre></div>
+<p>The target error rate is <code>error_level</code> (default 0.05): the
+familywise error rate under <code>"Bonferroni"</code>, the false
+discovery rate under <code>"BH"</code> and <code>"BY"</code>. It is
+distinct from the significance level you use to read
+<code>pval_pe</code>, but the global test depends on it as well, because
+it sets the screening threshold inside <code>J_m</code> (Section 3). A
+stricter value can therefore remove the enhancement on a given data
+set:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
+<span>                       error_level <span class="op">=</span> <span class="fl">0.005</span><span class="op">)</span></span>
+<span><span class="va">strict</span><span class="op">[</span><span class="va">strict</span><span class="op">$</span><span class="va">term</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pval_hdmm"</span>, <span class="st">"j_pe"</span>, <span class="st">"pval_pe"</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt;  term      value   </span></span>
+<span><span class="co">#&gt;  pval_hdmm 0.2538  </span></span>
+<span><span class="co">#&gt;  j_pe      616.5   </span></span>
+<span><span class="co">#&gt;  pval_pe   &lt; 0.0001</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Outcome model: continuous (linear)</span></span>
+<span><span class="co">#&gt; Selected mediators (2): 3, 4</span></span>
+<span><span class="co">#&gt; Tuning parameter (HBIC): lambda = 0.05 from 100 values in [0.05, 10] (the grid's lower end)</span></span></code></pre></div>
+<p>On these data a Bonferroni threshold built from
+<code>error_level = 0.005</code> keeps no mediator, so <code>J_m</code>
+is zero and <code>pval_pe</code> equals the benchmark’s
+<code>pval_hdmm</code>, where the default 0.05 gave a p-value of
+essentially zero.</p>
 </div>
 <div class="section level2">
-<h2 id="binary-and-count-outcomes">7. Binary and count outcomes<a class="anchor" aria-label="anchor" href="#binary-and-count-outcomes"></a>
+<h2 id="binary-and-count-outcomes">7. Binary and Count Outcomes<a class="anchor" aria-label="anchor" href="#binary-and-count-outcomes"></a>
 </h2>
 <p>The same construction works for non-continuous outcomes through a
 link function. Name the outcome type and the front end dispatches to the
 logistic (binary) or Poisson (count) model. The total indirect effect is
 then on the link scale (log-odds for binary, log-mean for count).</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span>
 <span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mediation_data.html">simulate_mediation_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">250</span>, p <span class="op">=</span> <span class="fl">50</span>, outcome <span class="op">=</span> <span class="st">"binary"</span>,</span>
 <span>                              pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1 <span class="op">=</span> <span class="fl">1</span>, c2 <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -323,94 +401,73 @@ then on the link scale (log-odds for binary, log-mean for count).</p>
 <span><span class="co">#&gt;  j_pe                  172.5   </span></span>
 <span><span class="co">#&gt;  pval_pe               &lt; 0.0001</span></span>
 <span><span class="co">#&gt;  total_indirect_effect -0.01329</span></span>
-<span><span class="co">#&gt;  total_indirect_lower  -0.2741 </span></span>
-<span><span class="co">#&gt;  total_indirect_upper  0.2475  </span></span>
-<span><span class="co">#&gt;  n_active_mediators    1       </span></span>
+<span><span class="co">#&gt;  n_selected_mediators  1       </span></span>
 <span><span class="co">#&gt;  df                    1       </span></span>
 <span><span class="co">#&gt;  n_candidate_mediators 50      </span></span>
 <span><span class="co">#&gt;  n_observations        250     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Outcome model: binary (logistic)</span></span>
-<span><span class="co">#&gt; Active mediators identified (1): 2</span></span>
-<span><span class="co">#&gt; Tuning parameter (HBIC): lambda = 0.05 from 20 values in [0.05, 1] (the grid's lower end)</span></span></code></pre></div>
+<span><span class="co">#&gt; Selected mediators (1): 2</span></span>
+<span><span class="co">#&gt; Tuning parameter (HBIC): lambda = 0.05 from 100 values in [0.05, 10] (the grid's lower end)</span></span></code></pre></div>
+<p>The tuning grid is the same for every outcome type, 100 values from
+0.05 to 10, and is tuned the same way (Section 4).</p>
 </div>
 <div class="section level2">
-<h2 id="a-simulation-study-size-and-power">8. A simulation study: size and power<a class="anchor" aria-label="anchor" href="#a-simulation-study-size-and-power"></a>
+<h2 id="a-simulation-study-size-and-power">8. A Simulation Study: Size and Power<a class="anchor" aria-label="anchor" href="#a-simulation-study-size-and-power"></a>
 </h2>
-<p><code><a href="../reference/pe_power_curve.html">pe_power_curve()</a></code> reproduces the article’s Monte Carlo
-studies. It sweeps the signal strength <code>c1</code>, simulating many
-data sets at each value and recording how often each test rejects. At
-<code>c1 = 0</code> (no mediation) the rejection rate estimates the Type
-I error rate; at nonzero <code>c1</code> it estimates power. A rate from
-<code>n_rep</code> replications carries a Monte Carlo standard error of
-about <code>sqrt(r * (1 - r) / n_rep)</code>, so the 40-replication run
-below knows a rate near 0.05 to within about 0.03 and a rate near 0.5 to
-within about 0.08.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<p><code><a href="../reference/pe_power_curve.html">pe_power_curve()</a></code> runs Monte Carlo studies of the kind
+the article reports. It sweeps the signal strength <code>c1</code>,
+simulating many data sets at each value and recording how often each
+test rejects. At <code>c1 = 0</code> (no mediation) the rejection rate
+estimates the Type I error rate; at nonzero <code>c1</code> it estimates
+power. A rate from <code>n_rep</code> replications carries a Monte Carlo
+standard error of about <code>sqrt(r * (1 - r) / n_rep)</code>, so the
+40-replication run below knows a rate near 0.05 to within about 0.03 and
+a rate near 0.5 to within about 0.08.</p>
+<p>A simulation study is also where the tuning grid is worth tuning to
+the situation. Each replication searches the whole grid, so the default
+grid of 100 values costs about five times the fitting of a 20-value
+grid. The study below passes a shorter grid, 20 values from 0.05 to 2:
+the fit of Section 4 put the HBIC minimum at the bottom of the default
+grid, so the shorter grid keeps that end and drops the range above 2,
+which no fit at this design reaches. Whatever the grid, each fit keeps
+the best value the grid offers, and the warning a single fit gives when
+its choice sits at an end of the grid is not raised inside a study,
+which searches a fixed grid by design. (On these 120 simulated data sets
+the default grid gives the same six rejection rates; it only takes five
+times as long.)</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span>
 <span><span class="va">pc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>, p <span class="op">=</span> <span class="fl">50</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                     pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                     n_rep <span class="op">=</span> <span class="fl">40</span><span class="op">)</span></span>
+<span>                     pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>                     n_rep <span class="op">=</span> <span class="fl">40</span>, lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pc</span></span>
-<span><span class="co">#&gt;  c1   rejection_hdmm rejection_pe n_valid n_empty</span></span>
-<span><span class="co">#&gt;  0    0.025          0.05         40      0      </span></span>
-<span><span class="co">#&gt;  0.25 0.025          0.025        40      0      </span></span>
-<span><span class="co">#&gt;  0.5  0.025          0.075        40      0      </span></span>
-<span><span class="co">#&gt;  0.75 0.05           0.175        40      0      </span></span>
-<span><span class="co">#&gt;  1    0.225          0.375        40      0      </span></span>
+<span><span class="co">#&gt;  c1  rejection_hdmm rejection_pe n_valid n_empty</span></span>
+<span><span class="co">#&gt;  0   0.075          0.1          40      0      </span></span>
+<span><span class="co">#&gt;  0.5 0.05           0.3          40      0      </span></span>
+<span><span class="co">#&gt;  1   0.05           0.975        40      0      </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Outcome: continuous</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pc</span><span class="op">$</span><span class="va">c1</span>, <span class="va">pc</span><span class="op">$</span><span class="va">rejection_pe</span>, type <span class="op">=</span> <span class="st">"b"</span>, pch <span class="op">=</span> <span class="fl">19</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>     xlab <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">c</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">*</span> <span class="st">" (signal strength)"</span><span class="op">)</span>,</span>
-<span>     ylab <span class="op">=</span> <span class="st">"empirical rejection rate"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Contrasting mediation: PE vs. benchmark"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">pc</span><span class="op">$</span><span class="va">c1</span>, <span class="va">pc</span><span class="op">$</span><span class="va">rejection_hdmm</span>, type <span class="op">=</span> <span class="st">"b"</span>, pch <span class="op">=</span> <span class="fl">1</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0.05</span>, col <span class="op">=</span> <span class="st">"grey60"</span>, lty <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"right"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"power-enhanced"</span>, <span class="st">"benchmark Wald"</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">19</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>       lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pc</span>, main <span class="op">=</span> <span class="st">"Contrasting Mediation: PE vs. Benchmark"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="POEMED_files/figure-html/power-1.png" class="r-plt" alt="Rejection-rate curves for the benchmark and power-enhanced tests" width="672"></p>
-<p>At <code>c1 = 0</code> both tests reject at about the nominal rate.
-As the contrasting signal grows the benchmark rejects in 22 percent of
-replications at <code>c1 = 1</code> and the power-enhanced test in 38
-percent. That is the enhancement at work, but at this small design it is
-modest, and the reason is worth knowing. The default tuning grid is the
-article’s grid rescaled to <code>n</code> and <code>p</code> (see
-<code><a href="../reference/pe_lambda_grid.html">?pe_lambda_grid</a></code>), and its lower end is set where the
-mediators the test names keep their familywise error guarantee. At
-<code>n = 150</code> and <code>p = 50</code> that floor also removes
-signal. The review-era grid, 20 values from 0.05 to 1, trades the
-guarantee for power on the same simulated data sets:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pc_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_power_curve.html">pe_power_curve</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>, p <span class="op">=</span> <span class="fl">50</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                            pattern <span class="op">=</span> <span class="st">"contrasting"</span>,</span>
-<span>                            c1_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span>, n_rep <span class="op">=</span> <span class="fl">40</span>,</span>
-<span>                            lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
-<span>                            seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span></span>
-<span><span class="va">pc_review</span></span>
-<span><span class="co">#&gt;  c1   rejection_hdmm rejection_pe n_valid n_empty</span></span>
-<span><span class="co">#&gt;  0    0.05           0.075        40      0      </span></span>
-<span><span class="co">#&gt;  0.25 0.025          0.1          40      0      </span></span>
-<span><span class="co">#&gt;  0.5  0              0.3          40      0      </span></span>
-<span><span class="co">#&gt;  0.75 0.025          0.75         40      0      </span></span>
-<span><span class="co">#&gt;  1    0.1            0.975        40      0      </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Outcome: continuous</span></span></code></pre></div>
-<p>With it the power-enhanced test rejects in 98 percent of replications
-at <code>c1 = 1</code>, but the mediators it names can include null
-ones: at the article’s design that grid raises the identified set’s
-familywise error rate from 0.000 to about 0.17. At the article’s design
-(<code>n = 300</code>, <code>p = 500</code>, 1000 replications) the
-default grid gives the article’s Figure 1(b): the power-enhanced test
-rejects in about 76 percent of replications at <code>c1 = 1</code> and
-the benchmark in about 15 percent, and at <code>c1 = 0.5</code> the
-printed rates are 0.331 and 0.087 (the reproduction vignette runs those
-settings). Choose the grid by what the analysis needs: the default when
-the identified mediators will be reported, the wider grid when only the
-global test matters at a small design.</p>
+<p>At <code>c1 = 0</code> the benchmark rejects in 7.5 percent of
+replications and the power-enhanced test in 10 percent, both near the
+nominal 5 percent given the Monte Carlo error of 40 replications. The PE
+rate can never fall below the benchmark’s on the same data sets, because
+<code>M_PE</code> is never smaller than <code>S_n</code>. It is higher
+whenever a null replication has a positive <code>J_m</code> that carries
+<code>M_PE</code> past the critical value where <code>S_n</code> alone
+falls short (Section 3). As the contrasting signal grows the benchmark
+rejects in 5 percent of replications at <code>c1 = 1</code> and the
+power-enhanced test in 97.5 percent. That is the enhancement at work.
+The article’s own study, at <code>n = 300</code>, <code>p = 500</code>,
+and 1,000 replications per point, is the converged version of this
+picture; the reproduction vignette gives the calls, with the grids of
+the article’s scripts.</p>
 </div>
 <div class="section level2">
-<h2 id="the-real-application-health-spending-as-a-mediator">9. The real application: health spending as a mediator<a class="anchor" aria-label="anchor" href="#the-real-application-health-spending-as-a-mediator"></a>
+<h2 id="the-real-application-health-spending-as-a-mediator">9. The Real Application: Health Spending as a Mediator<a class="anchor" aria-label="anchor" href="#the-real-application-health-spending-as-a-mediator"></a>
 </h2>
 <p>The package ships the article’s empirical data,
 <code>WHO_health_mediation</code>: a panel of 91 WHO member states over
@@ -421,7 +478,7 @@ Global Health Expenditure Database, and there are five health outcomes
 undernourishment). The substantive question: <strong>does health
 spending mediate the relationship between economic growth and population
 health?</strong></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">WHO_health_mediation</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">WHO_health_mediation</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 2002   68</span></span>
@@ -435,7 +492,7 @@ health?</strong></p>
 normalizations of the same spending), which is exactly the
 high-dimensional, correlated-mediator regime the method targets. Their
 definitions are in <code>WHO_indicator_codebook</code>:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">WHO_indicator_codebook</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    indicator</span></span>
 <span><span class="co">#&gt; 1    che_gdp</span></span>
@@ -448,16 +505,29 @@ definitions are in <code>WHO_indicator_codebook</code>:</p>
 <span><span class="co">#&gt; 3                                      Current Health Expenditure (CHE)</span></span>
 <span><span class="co">#&gt; 4               Domestic General Government Health Expenditure (GGHE-D)</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="building-one-analysis-design">Building one analysis design<a class="anchor" aria-label="anchor" href="#building-one-analysis-design"></a>
+<h3 id="building-one-analysis-design">Building One Analysis Design<a class="anchor" aria-label="anchor" href="#building-one-analysis-design"></a>
 </h3>
 <p><code><a href="../reference/WHO_mediation_design.html">WHO_mediation_design()</a></code> assembles the exposure, outcome,
 mediator, and confounder matrices for a chosen outcome, handling the
 missing-data coverage and the confounders (region, income group, and
-year) for you. The article standardizes the exposure and the mediators
-and centers the outcome, but leaves the confounder indicators unscaled;
-the call below does the same by hand and passes
-<code>scale = FALSE</code>.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+year) for you. The call below follows the preprocessing of the authors’
+analysis code behind the article’s tables: it standardizes the exposure
+and the mediators, centers the outcome, and leaves the confounders (the
+region and income indicators and the year) unscaled, then passes
+<code>scale = FALSE</code> so that <code><a href="../reference/pe_mediation.html">pe_mediation()</a></code> fits the
+matrices as given. Its tuning grid,
+<code>seq(0.1, 2, length.out = 100)</code>, is the grid behind the
+article’s real-data tables and the default of
+<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> for the global and every subgroup
+model. In this global model HBIC picks 0.1, the smallest value of that
+grid, as it does in about half of the article’s cells; the article’s
+analysis keeps its grid as it is, and so does this vignette, so the
+warning a single fit gives at an end of its grid is not shown in this
+section. The article’s text says that covariates are standardized before
+fitting, but its global finding for infant mortality is recovered with
+the confounders left unscaled. The last part of this section shows what
+standardizing them as well changes.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">des</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_design.html">WHO_mediation_design</a></span><span class="op">(</span><span class="st">"imr"</span><span class="op">)</span>          <span class="co"># infant mortality rate</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>observations <span class="op">=</span> <span class="va">des</span><span class="op">$</span><span class="va">n</span>, mediators <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">M</span><span class="op">)</span>, confounders <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; observations    mediators  confounders </span></span>
@@ -465,97 +535,101 @@ the call below does the same by hand and passes
 <span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>, <span class="va">des</span><span class="op">$</span><span class="va">Y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">Y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">M</span><span class="op">)</span>,</span>
 <span>                    Z <span class="op">=</span> <span class="va">des</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>, scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>                    lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">5</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">active</span> <span class="op">&lt;-</span> <span class="va">des</span><span class="op">$</span><span class="va">indicators</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"active_mediators"</span><span class="op">)</span><span class="op">]</span></span>
+<span>                    lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">selected</span> <span class="op">&lt;-</span> <span class="va">des</span><span class="op">$</span><span class="va">indicators</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"selected_mediators"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">WHO_indicator_codebook</span><span class="op">$</span><span class="va">description</span><span class="op">[</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">active</span>, <span class="va">WHO_indicator_codebook</span><span class="op">$</span><span class="va">indicator</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">selected</span>, <span class="va">WHO_indicator_codebook</span><span class="op">$</span><span class="va">indicator</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "General Government Expenditure (GGE) as % of GDP"</span></span></code></pre></div>
 <p>The PE test identifies general government expenditure as a share of
 GDP (<code>gge_gdp</code>) as the mediator through which economic growth
-reaches infant mortality, which is the article’s global finding.</p>
+reaches infant mortality. Yu and Kelley (in press) report the same
+single indicator for the global model in their Table 1.</p>
 </div>
 <div class="section level3">
-<h3 id="reproducing-the-articles-table">Reproducing the article’s table<a class="anchor" aria-label="anchor" href="#reproducing-the-articles-table"></a>
+<h3 id="the-full-subgroup-analysis">The Full Subgroup Analysis<a class="anchor" aria-label="anchor" href="#the-full-subgroup-analysis"></a>
 </h3>
 <p><code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> runs the whole set of models
-the article reports for one outcome (global, then within each WHO region
-and income group), using the article’s preprocessing, and returns a
-table in the shape of the article’s Table for that outcome.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis</a></span><span class="op">(</span><span class="st">"imr"</span>, groupings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"global"</span>, <span class="st">"region"</span><span class="op">)</span>,</span>
-<span>                              lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">10</span>, length.out <span class="op">=</span> <span class="fl">40</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">res</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"n_countries"</span>, <span class="st">"pval_hdmm"</span>, <span class="st">"pval_pe"</span>, <span class="st">"active_mediators"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;  group n_countries pval_hdmm pval_pe  active_mediators </span></span>
-<span><span class="co">#&gt;  ALL   91          0.0409    &lt; 0.0001 gge_gdp          </span></span>
-<span><span class="co">#&gt;  AFR   32          0.4415    0.4415   none             </span></span>
-<span><span class="co">#&gt;  AMR   28          0.4129    0.4129   none             </span></span>
-<span><span class="co">#&gt;  EMR   8           0.0304    0.0304   none             </span></span>
-<span><span class="co">#&gt;  EUR   9           0.0035    &lt; 0.0001 gge_gdp          </span></span>
-<span><span class="co">#&gt;  SEAR  5           0.3087    &lt; 0.0001 ext_usd2021_pc   </span></span>
-<span><span class="co">#&gt;  WPR   9           0.8721    &lt; 0.0001 chi_che, pvtd_gdp</span></span></code></pre></div>
-<p>Compare the benchmark and PE columns. In several regions the
-benchmark test sees nothing (<code>pval_hdmm</code> large) while the PE
-test rejects decisively and names the responsible indicator: in the
-Western Pacific region, for example, the benchmark p-value is near 1 yet
-the PE test detects compulsory health insurance and private expenditure
-as active mediators. These are the cases where heterogeneous mediation
-hides the signal from the conventional test, and they reproduce the
-findings in the article.</p>
+the article reports for one outcome (global, then within each WHO
+region, income group, and region-income cell), prepares the data the
+same way as the fit above, and returns one row per group, laid out like
+the article’s Table 1 (infant mortality) and Table 2 (undernourishment).
+Here it fits the global model and the six regions on its default tuning
+grid.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis</a></span><span class="op">(</span><span class="st">"imr"</span>, groupings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"global"</span>, <span class="st">"region"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">res</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"n_countries"</span>, <span class="st">"pval_hdmm"</span>, <span class="st">"pval_pe"</span>, <span class="st">"selected_mediators"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;  group n_countries pval_hdmm pval_pe  selected_mediators</span></span>
+<span><span class="co">#&gt;  ALL   91          0.0644    &lt; 0.0001 gge_gdp           </span></span>
+<span><span class="co">#&gt;  AFR   32          0.4434    0.4434   none              </span></span>
+<span><span class="co">#&gt;  AMR   28          0.4972    0.4972   none              </span></span>
+<span><span class="co">#&gt;  EMR   8           0.0261    0.0261   none              </span></span>
+<span><span class="co">#&gt;  EUR   9           &lt; 0.0001  &lt; 0.0001 none              </span></span>
+<span><span class="co">#&gt;  SEAR  5           0.6483    &lt; 0.0001 ext_usd2021_pc    </span></span>
+<span><span class="co">#&gt;  WPR   9           0.8681    &lt; 0.0001 chi_che           </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Outcome: imr</span></span></code></pre></div>
+<p>Compare the benchmark and PE columns. Where the benchmark test sees
+nothing (a large <code>pval_hdmm</code>) while the PE test rejects
+decisively and names the indicators responsible, heterogeneous mediation
+is hiding the signal from the conventional test. In the Western Pacific
+region, for example, the benchmark p-value is 0.87, yet the PE test
+rejects and flags compulsory health insurance as a share of current
+health expenditure (<code>chi_che</code>). Table 1 of Yu and Kelley (in
+press) shows the same contrast for this region.</p>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reads that comparison off the table for you,
 counting the groups where the PE test detects mediation the benchmark
 misses:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
 <span><span class="co">#&gt; POEMED comparison: IMR</span></span>
 <span><span class="co">#&gt;   groups: 7 (7 with data), alpha_level = 0.05</span></span>
-<span><span class="co">#&gt;   detected by benchmark (HDMM): 3   by power-enhanced (PE): 5</span></span>
-<span><span class="co">#&gt;   PE detects mediation in 2 groups the benchmark misses:</span></span>
-<span><span class="co">#&gt;  group n_countries pval_hdmm  pval_pe  active_mediators</span></span>
-<span><span class="co">#&gt;   SEAR           5     0.309 4.13e-41    ext_usd2021_pc</span></span>
-<span><span class="co">#&gt;    WPR           9     0.872 3.77e-83 chi_che, pvtd_gdp</span></span>
+<span><span class="co">#&gt;   detected by benchmark (HDMM): 2   by power-enhanced (PE): 5</span></span>
+<span><span class="co">#&gt;   PE detects mediation in 3 groups the benchmark misses:</span></span>
+<span><span class="co">#&gt;  group n_countries pval_hdmm  pval_pe selected_mediators</span></span>
+<span><span class="co">#&gt;    ALL          91    0.0644 &lt; 0.0001            gge_gdp</span></span>
+<span><span class="co">#&gt;   SEAR           5    0.6483 &lt; 0.0001     ext_usd2021_pc</span></span>
+<span><span class="co">#&gt;    WPR           9    0.8681 &lt; 0.0001            chi_che</span></span>
 <span><span class="co">#&gt;   most-flagged mediators:</span></span>
-<span><span class="co">#&gt;     gge_gdp            2</span></span>
 <span><span class="co">#&gt;     chi_che            1</span></span>
 <span><span class="co">#&gt;     ext_usd2021_pc     1</span></span>
-<span><span class="co">#&gt;     pvtd_gdp           1</span></span></code></pre></div>
+<span><span class="co">#&gt;     gge_gdp            1</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="why-the-preprocessing-matters">Why the preprocessing matters<a class="anchor" aria-label="anchor" href="#why-the-preprocessing-matters"></a>
+<h3 id="why-the-preprocessing-matters">Why the Preprocessing Matters<a class="anchor" aria-label="anchor" href="#why-the-preprocessing-matters"></a>
 </h3>
-<p><code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code> applies the article’s
-preprocessing internally. Passing the raw design to
-<code><a href="../reference/pe_mediation.html">pe_mediation()</a></code> with the default <code>scale = TRUE</code>
-standardizes the confounder indicators as well, and that is a different
-model: on the same tuning grid the benchmark Wald p-value moves from
-about 0.041 to about 0.23, and the penalized selection adds a second
-indicator, social health insurance (<code>shi_che</code>).</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<p>Passing the raw design to <code><a href="../reference/pe_mediation.html">pe_mediation()</a></code> with the
+default <code>scale = TRUE</code> standardizes the confounders as well,
+and that is a different model. On the same tuning grid as the first
+fit:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">des</span><span class="op">$</span><span class="va">X</span>, <span class="va">des</span><span class="op">$</span><span class="va">Y</span>, <span class="va">des</span><span class="op">$</span><span class="va">M</span>, Z <span class="op">=</span> <span class="va">des</span><span class="op">$</span><span class="va">Z</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>                    lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">5</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>article_preprocessing <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">fit</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_hdmm"</span><span class="op">]</span>,</span>
-<span>  raw_matrices <span class="op">=</span> <span class="va">raw</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">raw</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_hdmm"</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; article_preprocessing          raw_matrices </span></span>
-<span><span class="co">#&gt;            0.04094124            0.23191044</span></span>
-<span><span class="va">des</span><span class="op">$</span><span class="va">indicators</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">raw</span>, <span class="st">"active_mediators"</span><span class="op">)</span><span class="op">]</span></span>
+<span>                    lambda_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>confounders_unscaled <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">fit</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_hdmm"</span><span class="op">]</span>,</span>
+<span>  all_standardized <span class="op">=</span> <span class="va">raw</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">raw</span><span class="op">$</span><span class="va">term</span> <span class="op">==</span> <span class="st">"pval_hdmm"</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; confounders_unscaled     all_standardized </span></span>
+<span><span class="co">#&gt;           0.06437544           0.19852883</span></span>
+<span><span class="va">des</span><span class="op">$</span><span class="va">indicators</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">raw</span>, <span class="st">"selected_mediators"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "shi_che" "gge_gdp"</span></span></code></pre></div>
-<p>Use the article’s preprocessing (or
-<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code>, which applies it) whenever the
-goal is to reproduce its numbers.</p>
+<p>The benchmark Wald p-value moves from about 0.064 to about 0.2, and
+the screen selects a second indicator, social health insurance
+(<code>shi_che</code>). Leave the confounders unscaled (or call
+<code><a href="../reference/WHO_mediation_analysis.html">WHO_mediation_analysis()</a></code>, which does) whenever the goal is
+to compare results with the article’s tables.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="beyond-the-global-test-the-toolkit">10. Beyond the global test: the toolkit<a class="anchor" aria-label="anchor" href="#beyond-the-global-test-the-toolkit"></a>
+<h2 id="beyond-the-global-test-the-toolkit">10. Beyond the Global Test: The Toolkit<a class="anchor" aria-label="anchor" href="#beyond-the-global-test-the-toolkit"></a>
 </h2>
 <p>The global test is the core, but POEMED ships a few conveniences
 around it.</p>
 <div class="section level3">
-<h3 id="a-formula-interface-for-data-frames">A formula interface for data frames<a class="anchor" aria-label="anchor" href="#a-formula-interface-for-data-frames"></a>
+<h3 id="a-formula-interface-for-data-frames">A Formula Interface for Data Frames<a class="anchor" aria-label="anchor" href="#a-formula-interface-for-data-frames"></a>
 </h3>
 <p>If your variables live in a data frame, <code><a href="../reference/pe_mediate.html">pe_mediate()</a></code>
 takes a formula for the outcome and exposure, the names of the mediator
 columns, and (optionally) confounder names, and calls
 <code><a href="../reference/pe_mediation.html">pe_mediation()</a></code> for you.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">113</span><span class="op">)</span></span>
 <span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mediation_data.html">simulate_mediation_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, p <span class="op">=</span> <span class="fl">60</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
 <span>                             pattern <span class="op">=</span> <span class="st">"contrasting"</span>, c1 <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -564,73 +638,91 @@ columns, and (optionally) confounder names, and calls
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediate.html">pe_mediate</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x</span>, data <span class="op">=</span> <span class="va">df</span>, mediators <span class="op">=</span> <span class="va">meds</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="why-each-mediator-the-per-mediator-table">Why each mediator? The per-mediator table<a class="anchor" aria-label="anchor" href="#why-each-mediator-the-per-mediator-table"></a>
+<h3 id="why-each-mediator-the-per-mediator-table">Why Each Mediator? The Per-Mediator Table<a class="anchor" aria-label="anchor" href="#why-each-mediator-the-per-mediator-table"></a>
 </h3>
 <p><code><a href="../reference/pe_mediators.html">pe_mediators()</a></code> opens up the screening step: for every
-candidate mediator the penalized fit selected, it shows the two path
-statistics, the two path p-values, the combined screening p-value, and
-whether the mediator was flagged active. This is how you see
-<em>why</em> the test reached its conclusion.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+candidate mediator the penalized fit kept, it shows the two path
+statistics, the screening p-value (the larger of the two path p-values),
+and whether the screen selected the mediator (the <code>selected</code>
+column). This is how you see <em>why</em> the test reached its
+conclusion.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pe_mediators.html">pe_mediators</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  mediator name t_outcome t_exposure screen_p selected</span></span>
-<span><span class="co">#&gt;  1        X1   18.22     0.3641     0.7158   FALSE   </span></span>
-<span><span class="co">#&gt;  2        X2   -7.179    3.131      0.0017    TRUE</span></span></code></pre></div>
+<span><span class="co">#&gt;  1        X1   21.75     0.3641     0.7158   FALSE   </span></span>
+<span><span class="co">#&gt;  2        X2   -10.21    3.131      0.0017    TRUE   </span></span>
+<span><span class="co">#&gt;  3        X3   8.602     4.349      &lt; 0.0001  TRUE   </span></span>
+<span><span class="co">#&gt;  4        X4   -6.82     6.185      &lt; 0.0001  TRUE   </span></span>
+<span><span class="co">#&gt;  33       X33  -2.378    -13.08     0.0174   FALSE</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> shows the same evidence graphically, the
-screening strength of each selected mediator with the active ones
-highlighted.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+screening strength of each candidate the penalized fit kept, with the
+mediators the screen selected highlighted and the rest marked as
+screened out.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="POEMED_files/figure-html/plot-mediators-1.png" class="r-plt" alt="Per-mediator screening evidence for the selected candidate mediators" width="672"></p>
+<p><img src="POEMED_files/figure-html/plot-mediators-1.png" class="r-plt" alt="Per-mediator screening evidence for the candidate mediators the penalized fit kept" width="672"></p>
 </div>
 <div class="section level3">
-<h3 id="broom-verbs">broom verbs<a class="anchor" aria-label="anchor" href="#broom-verbs"></a>
+<h3 id="working-with-broom">Working With broom<a class="anchor" aria-label="anchor" href="#working-with-broom"></a>
 </h3>
 <p><code><a href="../reference/poemed_broom.html">tidy()</a></code> returns the per-mediator table and
 <code><a href="../reference/poemed_broom.html">glance()</a></code> a one-row summary, so a POEMED result drops into
 broom and tidyverse workflows.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/poemed_broom.html">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    stat_hdmm pval_hdmm  stat_pe      pval_pe total_indirect_effect</span></span>
-<span><span class="co">#&gt; 1 0.03881027  0.843825 174.1554 9.154634e-40            0.01053815</span></span>
-<span><span class="co">#&gt;   n_active_mediators n_observations</span></span>
-<span><span class="co">#&gt; 1                  1            200</span></span></code></pre></div>
+<span><span class="co">#&gt;   stat_hdmm pval_hdmm  stat_pe       pval_pe total_indirect_effect</span></span>
+<span><span class="co">#&gt; 1  1.302293 0.2537948 865.4797 3.135368e-190           -0.08395881</span></span>
+<span><span class="co">#&gt;   n_selected_mediators n_observations</span></span>
+<span><span class="co">#&gt; 1                    3            200</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="all-three-multiplicity-methods-at-once">All three multiplicity methods at once<a class="anchor" aria-label="anchor" href="#all-three-multiplicity-methods-at-once"></a>
+<h3 id="all-three-multiplicity-methods-at-once">All Three Multiplicity Methods at Once<a class="anchor" aria-label="anchor" href="#all-three-multiplicity-methods-at-once"></a>
 </h3>
 <p>Pass <code>report_all_methods = TRUE</code> and
-<code><a href="../reference/pe_selection.html">pe_selection()</a></code> reports the active set under Bonferroni
+<code><a href="../reference/pe_selection.html">pe_selection()</a></code> reports the selected set under Bonferroni
 (familywise error rate), Benjamini-Hochberg, and Benjamini-Yekutieli
 (false discovery rate) side by side, as the supplement of the article
 does.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pe_mediation.html">pe_mediation</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">X</span>, <span class="va">d</span><span class="op">$</span><span class="va">Y</span>, <span class="va">d</span><span class="op">$</span><span class="va">M</span>, outcome <span class="op">=</span> <span class="st">"continuous"</span>,</span>
 <span>                        report_all_methods <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/pe_selection.html">pe_selection</a></span><span class="op">(</span><span class="va">fit_all</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  method     n_active j_pe  stat_pe pval_pe  active_mediators</span></span>
-<span><span class="co">#&gt;  Bonferroni 1        174.1 174.2   &lt; 0.0001 2               </span></span>
-<span><span class="co">#&gt;  BH         1        174.1 174.2   &lt; 0.0001 2               </span></span>
-<span><span class="co">#&gt;  BY         1        174.1 174.2   &lt; 0.0001 2</span></span></code></pre></div>
+<span><span class="co">#&gt;  method     n_selected j_pe  stat_pe pval_pe  selected_mediators</span></span>
+<span><span class="co">#&gt;  Bonferroni 3          864.2 865.5   &lt; 0.0001 2, 3, 4           </span></span>
+<span><span class="co">#&gt;  BH         4          1105  1106    &lt; 0.0001 2, 3, 4, 33       </span></span>
+<span><span class="co">#&gt;  BY         3          864.2 865.5   &lt; 0.0001 2, 3, 4</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="planning-the-sample-size">Planning the sample size<a class="anchor" aria-label="anchor" href="#planning-the-sample-size"></a>
+<h3 id="planning-the-sample-size">Planning the Sample Size<a class="anchor" aria-label="anchor" href="#planning-the-sample-size"></a>
 </h3>
 <p><code><a href="../reference/ss_power_pe_mediation.html">ss_power_pe_mediation()</a></code> plans a study: over a grid of
 candidate sample sizes it estimates the power of the PE test by
-simulation and reports the smallest sample size that reaches the target
-power. It runs a Monte Carlo study, so it is shown here but not
-evaluated.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+simulation and stores the smallest sample size that reaches the target
+power in the <code>"recommended_n"</code> attribute. That attribute is
+<code>NA</code> when no size in the grid reaches the target, so choose a
+grid that brackets it. Under the default tuning grid this contrasting
+design reaches a power of 0.8 between 100 and 150 observations, so the
+grid below brackets that. It runs a Monte Carlo study (400 fits on the
+default grid, about a minute and a half), so it is shown here but not
+evaluated; a shorter tuning grid, passed as <code>lambda_grid</code>,
+would cut that time.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plan</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ss_power_pe_mediation.html">ss_power_pe_mediation</a></span><span class="op">(</span>outcome <span class="op">=</span> <span class="st">"continuous"</span>, pattern <span class="op">=</span> <span class="st">"contrasting"</span>,</span>
-<span>                              p <span class="op">=</span> <span class="fl">50</span>, n_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">80</span>, <span class="fl">120</span>, <span class="fl">160</span>, <span class="fl">200</span><span class="op">)</span>,</span>
-<span>                              target_power <span class="op">=</span> <span class="fl">0.8</span>, n_rep <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span>                              p <span class="op">=</span> <span class="fl">50</span>, n_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">150</span>, <span class="fl">200</span>, <span class="fl">250</span><span class="op">)</span>,</span>
+<span>                              target_power <span class="op">=</span> <span class="fl">0.8</span>, n_rep <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">113</span><span class="op">)</span></span>
 <span><span class="va">plan</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plan</span>, <span class="st">"recommended_n"</span><span class="op">)</span></span></code></pre></div>
+<p>Run as shown, it estimates the power of the power-enhanced test at
+0.77, 0.92, 1.00, and 1.00 for the four sizes and recommends
+<code>n = 150</code>. Each power estimate from 100 replications carries
+a Monte Carlo standard error of about 0.04 near a power of 0.8, so a
+size whose estimate sits just above the target could give way to the
+next size under another seed; raise <code>n_rep</code> for a plan you
+will report.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="bringing-your-own-data">11. Bringing your own data<a class="anchor" aria-label="anchor" href="#bringing-your-own-data"></a>
+<h2 id="bringing-your-own-data">11. Bringing Your Own Data<a class="anchor" aria-label="anchor" href="#bringing-your-own-data"></a>
 </h2>
 <p>To analyze your own study, arrange:</p>
 <ul>
@@ -649,47 +741,68 @@ matrix of confounders.</li>
 </ul>
 <p>then call <code>pe_mediation(X, Y, M, Z, outcome = ...)</code>. The
 defaults standardize the inputs as the method assumes, choose the tuning
-parameter by a high-dimensional information criterion from a grid whose
-lower end keeps the identified set’s error-rate guarantee, and control
-the familywise error rate when identifying active mediators. Everything
-returned is an ordinary data frame you can index, save, or plot, and the
-print footer reports the tuning parameter chosen.</p>
+parameter by a high-dimensional information criterion over a grid of 100
+values from 0.05 to 10 for every outcome type, and target the familywise
+error rate when selecting individual mediators. The grid can be tuned:
+shortened or narrowed to save time, widened or refined when the value
+chosen sits at an end of the grid, which the fit warns about and the
+footer notes (Section 4). Everything returned is an ordinary data frame
+you can index, save, or plot, and the print footer reports the tuning
+parameter chosen and the grid it came from.</p>
 <div class="section level3">
 <h3 id="when-poemed-is-the-right-tool-and-when-it-is-not">When POEMED Is the Right Tool, and When It Is Not<a class="anchor" aria-label="anchor" href="#when-poemed-is-the-right-tool-and-when-it-is-not"></a>
 </h3>
 <p>The tests assume a linear (or generalized linear) outcome model with
 a sparse set of active mediators, standardized inputs, and complete
-data. Some practical limits, seen on simulated data during the package’s
-release audit:</p>
+data. The section “When to Use POEMED” of <code><a href="../reference/pe_mediation.html">?pe_mediation</a></code>
+states the practical limits seen on simulated data, with the design
+behind each. In brief:</p>
 <ul>
 <li>Sample size. The penalized selection needs <code>n</code> large
-relative to <code>log(p)</code> and to the signal; with <code>n</code>
-near 100 and <code>p</code> in the thousands under the contrasting
-pattern the selection keeps a single mediator and the power-enhanced
-test has no power to add. The default grid’s floor rises as
-<code>n</code> falls (see <code><a href="../reference/pe_lambda_grid.html">?pe_lambda_grid</a></code>), which protects
-the identified set but costs global power at small designs; the section
-on the simulation study above shows the size of that cost.</li>
-<li>Strongly correlated mediators. With an autoregressive correlation of
-0.9 among neighboring mediators the selection keeps one representative
-of a correlated block, so the identified set is unstable from sample to
-sample even when the global test rejects.</li>
+relative to <code>log(p)</code> and to the signal. With
+<code>n = 100</code> and <code>p = 2000</code> under the contrasting
+pattern (continuous outcome, <code>c1 = 1</code>, default grid, seeds 1
+to 10), the selection kept at most one mediator: one in 4 of the 10
+samples and none in the other 6. The power-enhanced test could then draw
+on that one mediator only, not on the contrasting structure; it rejected
+in 4 of the 10 samples, and the benchmark in 2.</li>
+<li>Strongly correlated mediators. Correlation among the mediators
+weakens both the selection and the screen. Under the contrasting pattern
+(continuous outcome, <code>n = 200</code>, <code>p = 60</code>,
+<code>c1 = 1</code>, default grid, seeds 1 to 10), the screen selected
+at least one mediator in 6 of 10 samples with an autoregressive
+correlation of 0.9 among neighboring mediators, against 10 of 10 at 0.5,
+and the selected set varied from sample to sample (one sample named a
+null mediator beside an active one at both correlations).</li>
+<li>Selected mediators in finite samples. The screen’s control of its
+error rate is asymptotic. Under the contrasting pattern with a strong
+signal (continuous outcome, <code>c1 = 1</code>, default grid,
+Bonferroni screen, <code>error_level = 0.05</code>), the selected set
+held an inactive mediator in 0.14 of 400 samples at
+<code>n = 150</code>, <code>p = 60</code> and in 0.11 of 200 samples at
+<code>n = 300</code>, <code>p = 500</code>; the rate was 0.05 under the
+homogeneous pattern at the smaller design and 0.00 with no signal. It
+depends on the tuning grid: 20 values from 0.2 to 0.39 gave 0.00 in the
+same runs, with lower recall (0.13 against 0.48, and 0.25 against
+0.47).</li>
 <li>Rare binary outcomes. With about 2 to 3 percent events at
 <code>n = 300</code> the penalized logistic fit selects nothing at any
-grid value; the fit is empty and the function says so (see
-<code><a href="../reference/pe_mediation.html">?pe_mediation</a></code>).</li>
-<li>Overdispersed counts. The count model is Poisson; under negative
-binomial overdispersion its size was not inflated at
-<code>n = 200</code>, <code>p = 100</code>, but about a tenth of the
-fits were empty.</li>
-<li>Missing values are not handled; complete the data first.</li>
+grid value; the fit is empty and the function says so.</li>
+<li>Overdispersed counts. The count model is Poisson. In null
+simulations with negative binomial counts (size parameter 1) at
+<code>n = 200</code> and <code>p = 100</code>, 300 replications on a
+grid of 20 values from 0.05 to 1, its size was not inflated, but about a
+tenth of the fits were empty.</li>
+<li>Missing values. <code><a href="../reference/pe_mediation.html">pe_mediation()</a></code> stops on a missing
+value, so supply complete cases; <code><a href="../reference/pe_mediate.html">pe_mediate()</a></code> drops
+incomplete rows and says how many it dropped.</li>
 </ul>
 </div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Yu, X., and Kelley, K. (in press). Power Enhancement in
+<p>Yu, X., &amp; Kelley, K. (in press). Power Enhancement in
 High-Dimensional Heterogeneous Mediation Analysis. <em>Journal of the
 American Statistical Association</em>.</p>
 <p>Fan, J., Liao, Y., &amp; Yao, J. (2015). Power enhancement in
@@ -703,7 +816,7 @@ American Statistical Association, 117</em>(539), 1110–1121. <a href="https://d
 <div class="section level2">
 <h2 id="session-information">Session Information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -737,8 +850,8 @@ American Statistical Association, 117</em>(539), 1110–1121. <a href="https://d
 <span><span class="co">#&gt; [21] compiler_4.6.1    codetools_0.2-20  fs_2.1.0          Rcpp_1.1.2       </span></span>
 <span><span class="co">#&gt; [25] lattice_0.22-9    systemfonts_1.3.2 digest_0.6.39     R6_2.6.1         </span></span>
 <span><span class="co">#&gt; [29] ncvreg_3.16.0     splines_4.6.1     shape_1.4.6.1     bslib_0.12.0     </span></span>
-<span><span class="co">#&gt; [33] Matrix_1.7-5      withr_3.0.3       tools_4.6.1       iterators_1.0.14 </span></span>
-<span><span class="co">#&gt; [37] survival_3.8-6    pkgdown_2.2.1     cachem_1.1.0      desc_1.4.3</span></span></code></pre></div>
+<span><span class="co">#&gt; [33] Matrix_1.7-5      tools_4.6.1       iterators_1.0.14  survival_3.8-6   </span></span>
+<span><span class="co">#&gt; [37] pkgdown_2.2.1     cachem_1.1.0      desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

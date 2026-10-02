@@ -1,89 +1,89 @@
 # Package index
 
-## Testing for mediation
+## Testing for Mediation
 
 The power-enhanced global test and its outcome-specific workers.
 
 - [`pe_mediation()`](https://yelleknek.github.io/POEMED/reference/pe_mediation.md)
-  : Power-enhanced test for high-dimensional mediation
+  : Power-Enhanced Test for High-Dimensional Mediation
 - [`pe_mediate()`](https://yelleknek.github.io/POEMED/reference/pe_mediate.md)
-  : Power-enhanced mediation test from a data frame (formula interface)
+  : Power-Enhanced Mediation Test From a Data Frame (Formula Interface)
 - [`pe_mediation_linear()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_linear.md)
-  : Power-enhanced mediation test for a continuous outcome
+  : Power-Enhanced Mediation Test for a Continuous Outcome
 - [`pe_mediation_logistic()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_logistic.md)
-  : Power-enhanced mediation test for a binary outcome
+  : Power-Enhanced Mediation Test for a Binary Outcome
 - [`pe_mediation_poisson()`](https://yelleknek.github.io/POEMED/reference/pe_mediation_poisson.md)
-  : Power-enhanced mediation test for a count outcome
-- [`pe_lambda_grid()`](https://yelleknek.github.io/POEMED/reference/pe_lambda_grid.md)
-  : Default tuning-parameter grid for the penalized mediator fit
+  : Power-Enhanced Mediation Test for a Count Outcome
 
-## Identifying the active mediators
+## Identifying the Active Mediators
 
 - [`pe_mediators()`](https://yelleknek.github.io/POEMED/reference/pe_mediators.md)
-  : Per-mediator detail behind a power-enhanced mediation test
+  : Per-Mediator Detail Behind a Power-Enhanced Mediation Test
 - [`pe_selection()`](https://yelleknek.github.io/POEMED/reference/pe_selection.md)
-  : Active mediators identified under each multiplicity method
+  : Selected Mediators Under Each Multiplicity Method
 
-## Planning and Monte Carlo studies
+## Planning and Monte Carlo Studies
 
 Size, power, identification, and sample size planning by simulation.
 
 - [`pe_power_curve()`](https://yelleknek.github.io/POEMED/reference/pe_power_curve.md)
-  : Monte Carlo size and power curve for the PE mediation tests
+  : Monte Carlo Size and Power Curve for the PE Mediation Tests
 - [`pe_simulation_study()`](https://yelleknek.github.io/POEMED/reference/pe_simulation_study.md)
-  : Run the power study under several mediation patterns at once
+  : Run the Power Study Under Several Mediation Patterns at Once
 - [`pe_identification_study()`](https://yelleknek.github.io/POEMED/reference/pe_identification_study.md)
-  : Monte Carlo study of individual-mediator identification (FWER / FDR)
+  : Monte Carlo Study of Individual-Mediator Identification (FWER / FDR)
 - [`ss_power_pe_mediation()`](https://yelleknek.github.io/POEMED/reference/ss_power_pe_mediation.md)
-  : Simulation-based sample size planning for the power-enhanced
-  mediation test
+  : Simulation-Based Sample Size Planning for the Power-Enhanced
+  Mediation Test
 
-## Simulating mediation data
+## Simulating Mediation Data
 
 - [`simulate_mediation_data()`](https://yelleknek.github.io/POEMED/reference/simulate_mediation_data.md)
-  : Simulate high-dimensional mediation data
+  : Simulate High-Dimensional Mediation Data
 - [`simulate_guo_mediation()`](https://yelleknek.github.io/POEMED/reference/simulate_guo_mediation.md)
-  : Simulate the real-data-motivated heterogeneous mediation setting
+  : Simulate the Real-Data-Motivated Heterogeneous Mediation Setting
 - [`mediation_ar1_cov()`](https://yelleknek.github.io/POEMED/reference/mediation_ar1_cov.md)
-  : Autoregressive (AR(1)) covariance matrix for mediator simulation
+  : Autoregressive (AR(1)) Covariance Matrix for Mediator Simulation
 
-## The WHO health-expenditure analysis
+## The WHO Health-Expenditure Analysis
 
 - [`WHO_mediation_analysis()`](https://yelleknek.github.io/POEMED/reference/WHO_mediation_analysis.md)
-  : Reproduce the article's empirical mediation analysis
+  : Run the Article's Empirical Mediation Analysis
 - [`WHO_mediation_design()`](https://yelleknek.github.io/POEMED/reference/WHO_mediation_design.md)
-  : Build a mediation design from the WHO health-expenditure data
+  : Build a Mediation Design From the WHO Health-Expenditure Data
 
-## Results, printing, and tidiers
+## Results, Printing, and Tidiers
 
 - [`format(`*`<poemed_tbl>`*`)`](https://yelleknek.github.io/POEMED/reference/poemed_tbl.md)
   [`print(`*`<poemed_tbl>`*`)`](https://yelleknek.github.io/POEMED/reference/poemed_tbl.md)
-  : Tidy printing for POEMED result tables
+  [`` `[`( ``*`<poemed_tbl>`*`)`](https://yelleknek.github.io/POEMED/reference/poemed_tbl.md)
+  [`rbind(`*`<poemed_tbl>`*`)`](https://yelleknek.github.io/POEMED/reference/poemed_tbl.md)
+  : Tidy Printing for POEMED Result Tables
 - [`summary(`*`<poemed_tbl>`*`)`](https://yelleknek.github.io/POEMED/reference/summary.poemed_tbl.md)
-  : Summarize a POEMED table
+  [`print(`*`<summary.poemed_tbl>`*`)`](https://yelleknek.github.io/POEMED/reference/summary.poemed_tbl.md)
+  : Summarize a POEMED Table
 - [`plot(`*`<poemed_tbl>`*`)`](https://yelleknek.github.io/POEMED/reference/plot.poemed_tbl.md)
-  : Plot a POEMED result
+  : Plot a POEMED Result
 - [`tidy()`](https://yelleknek.github.io/POEMED/reference/poemed_broom.md)
   [`glance()`](https://yelleknek.github.io/POEMED/reference/poemed_broom.md)
-  : Broom verbs for POEMED results
+  : Broom Verbs for POEMED Results
 
-## Data sets
+## Data Sets
 
 - [`WHO_health_mediation`](https://yelleknek.github.io/POEMED/reference/WHO_health_mediation.md)
-  : WHO / World Bank health-expenditure mediation data (benchmark data
-  set)
+  : WHO / World Bank Health-Expenditure Mediation Data (Benchmark Data
+  Set)
 - [`WHO_indicator_codebook`](https://yelleknek.github.io/POEMED/reference/WHO_indicator_codebook.md)
-  : Codebook for the WHO health-expenditure indicators
+  : Codebook for the WHO Health-Expenditure Indicators
 - [`guo_calibration`](https://yelleknek.github.io/POEMED/reference/guo_calibration.md)
-  : Calibration constants for the real-data-motivated heterogeneous
-  setting
-- [`example_data`](https://yelleknek.github.io/POEMED/reference/example_data.md)
-  [`example_continuous`](https://yelleknek.github.io/POEMED/reference/example_data.md)
+  : Calibration Constants for the Real-Data-Motivated Heterogeneous
+  Setting
+- [`example_continuous`](https://yelleknek.github.io/POEMED/reference/example_data.md)
   [`example_binary`](https://yelleknek.github.io/POEMED/reference/example_data.md)
   [`example_count`](https://yelleknek.github.io/POEMED/reference/example_data.md)
-  : Example high-dimensional mediation data sets
+  : Example High-Dimensional Mediation Data Sets
 
-## Package overview
+## Package Overview
 
 - [`POEMED`](https://yelleknek.github.io/POEMED/reference/POEMED-package.md)
   [`POEMED-package`](https://yelleknek.github.io/POEMED/reference/POEMED-package.md)
