@@ -1,0 +1,39 @@
+POEMED is distributed under the GNU General Public License, version 3 or
+later (see the License field of DESCRIPTION). This note records the terms
+of the third-party data the package redistributes in its data sets
+WHO_health_mediation and WHO_indicator_codebook.
+
+World Bank Open Data, World Development Indicators
+  Series: GDP per capita growth (annual percent); infant mortality rate;
+  under-five mortality rate; life expectancy at birth; prevalence of low
+  birthweight; prevalence of undernourishment.
+  Source: https://data.worldbank.org/ (accessed November 2024).
+  License: Creative Commons Attribution 4.0 International (CC BY 4.0),
+  the World Bank's default license for the data sets it produces and
+  distributes as open data (https://datacatalog.worldbank.org/public-licenses).
+  Attribution: World Bank, World Development Indicators.
+  Changes made: merged with the WHO data by country and year and restricted
+  to the 91 WHO member states and the years 2000 to 2021 of the panel; no
+  value was altered.
+
+World Health Organization, Global Health Expenditure Database (GHED)
+  Series: the 57 health-expenditure indicators listed in
+  WHO_indicator_codebook, and the WHO region and World Bank income-group
+  labels.
+  Source: https://apps.who.int/nha/database (accessed November 2024).
+  Terms: WHO's terms and conditions for the use of its data
+  (https://www.who.int/about/policies/publishing/data-policy/terms-and-conditions):
+  the data may be used, with attribution, for non-commercial public health
+  purposes; nothing in this package suggests that WHO endorses any
+  organization, product, or service, and the WHO name and emblem are not
+  used.
+  Attribution: World Health Organization, Global Health Expenditure
+  Database, accessed November 2024, with acknowledgement of the countries
+  that provided the underlying data.
+  Changes made: merged with the World Bank series by country and year and
+  restricted to the 91 WHO member states with complete indicator data for
+  2000 to 2021; no value was altered.
+
+The script that builds both data sets from the downloaded source files,
+data-raw/WHO_health_mediation.R, is in the package's repository at
+https://github.com/yelleKneK/POEMED.

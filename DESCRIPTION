@@ -1,0 +1,61 @@
+Package: POEMED
+Type: Package
+Title: Power Enhancement for High-Dimensional Mediation Analysis
+Version: 1.0.0
+Date: 2026-10-01
+Authors@R: c(
+    person("Xiufan", "Yu", role = "aut",
+           email = "xiufan.yu@nd.edu"),
+    person("Ken", "Kelley", role = c("aut", "cre"),
+           email = "kkelley@nd.edu",
+           comment = c(ORCID = "0000-0002-4756-8360")))
+Description: Provides powerful global tests for high-dimensional mediation
+    analysis with heterogeneous (and even contrasting) mediation effects,
+    for continuous, binary, and count outcomes. The power enhancement (PE)
+    idea augments a Wald test on the total indirect effect with a component
+    that captures marginal signals from individual mediators, so that active
+    mediators are detected even when their individual indirect effects
+    cancel and the total indirect effect is zero. The package also
+    identifies which individual mediators are active with familywise error
+    rate or false discovery rate control. The methods implement Yu and
+    Kelley (in press), "Power Enhancement in High-Dimensional Heterogeneous
+    Mediation Analysis" (Journal of the American Statistical Association);
+    the package also simulates mediation data under the homogeneous,
+    heterogeneous, and contrasting patterns that the article studies, ships
+    its empirical health-expenditure data as a benchmark and reruns that
+    empirical analysis, and runs the designs of its Monte Carlo size and
+    power studies. The name, 'POEMED', from POwer-Enhanced MEDiation,
+    encodes the method. Every estimation and testing function returns a
+    tidy 'data.frame' that prints with sensible rounding and composes with
+    the broader R ecosystem.
+Imports: generics,
+         glmnet,
+         graphics,
+         ncvreg,
+         parallel,
+         stats,
+         utils,
+         withr (>= 3.0.3)
+Suggests: knitr,
+          rmarkdown,
+          testthat (>= 3.2.0),
+          tools
+License: GPL (>= 3)
+Copyright: Xiufan Yu and Ken Kelley, except the WHO_health_mediation and
+    WHO_indicator_codebook data sets, which redistribute World Health
+    Organization (Global Health Expenditure Database) and World Bank
+    (World Development Indicators) data under the terms stated on the
+    help page of WHO_health_mediation and, in the source package, in the
+    file LICENSE.note.
+URL: https://github.com/yelleKneK/POEMED,
+    https://yelleknek.github.io/POEMED/
+BugReports: https://github.com/yelleKneK/POEMED/issues
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+LazyDataCompression: xz
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Depends: R (>= 4.1.0)
+Config/roxygen2/version: 8.1.0

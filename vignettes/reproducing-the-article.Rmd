@@ -1,0 +1,517 @@
+---
+title: "Reproducing the Article's Analyses With POEMED"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Reproducing the Article's Analyses With POEMED}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
+                      fig.height = 4.2)
+```
+
+This vignette accompanies the article "Power Enhancement in
+High-Dimensional Heterogeneous Mediation Analysis" (Yu and Kelley, in
+press at the *Journal of the American Statistical Association*). Its
+second part reruns the article's empirical data analysis (its Section 5)
+with POEMED and reads the package's results against the printed tables,
+cell by cell. Its first part describes the article's simulation designs
+(its Section 4, and Sections S.4.1 and S.4.4 of its supplement) and gives
+the calls that run each of them at the article's scale, on the grids of
+the article's own scripts where the article records one. The companion
+vignette *Power Enhancement for
+High-Dimensional Mediation: A Guided Tour* introduces the method itself.
+
+**Scope of the comparison.** The article benchmarks the power-enhanced
+tests (PE-HDMM for linear outcomes, PE-HDGMM for generalized outcomes)
+against several competitors: HDMM, HILMA, and GlobalTest. POEMED
+implements the proposed PE tests and the **HDMM** benchmark (the
+total-indirect-effect Wald test that the PE component augments). Every
+POEMED result therefore reports the central contrast of the article's
+figures and tables, **PE versus HDMM**; HILMA and GlobalTest are
+separate methods outside this package.
+
+Load the package and fix the random-number seed before running any of
+the code below:
+
+```{r seed}
+library(POEMED)
+set.seed(113)
+```
+
+# Part I. The Article's Simulation Designs (Article Section 4)
+
+The simulation study asks two questions of every test. Under the global
+null of no active mediator (`c1 = 0`) the rejection rate estimates the
+**Type I error rate**, which should sit near the nominal level,
+`alpha_level = 0.05`. Away from the null (`c1 != 0`) the rejection rate
+estimates **power**. `pe_power_curve()` sweeps `c1` and returns both the
+benchmark (`rejection_hdmm`) and power-enhanced (`rejection_pe`)
+rejection rates at each grid point, and `pe_simulation_study()` runs
+several patterns at once and stacks the results.
+
+The article's designs use `n = 300`, `p = 500`, and **1,000
+replications** per design point, and its scripts search a tuning grid
+set by hand for each outcome family: 20 values from 0.2 to 0.39 for the
+linear model, 15 values from 0.04 to 0.2 for the logistic model, and 15
+values from 0.7 to 5 for the Poisson model. (The linear script searched a
+second grid, 20 values from 0.27 to 0.46, for the reduced model that the
+benchmark test needs; the package searches one grid for both fits, so the
+calls below pass the full-model grid.) The calls below for Sections 4.1,
+4.2, and S.4.1 pass those grids as `lambda_grid`, so they run the
+article's designs as its scripts did, whatever the package's default grid
+(100 values from 0.05 to 10); the article records no grid for the
+real-data-motivated setting of Section S.4.4, whose call uses the package
+default. The chunks in this
+part are shown but not run: a linear or logistic panel takes one to a
+few hours of computing at this scale, and the Poisson homogeneous panel
+days. Set `cores` above 1 to parallelize; a seeded run repeats exactly
+at the same number of cores.
+
+## Section 4.1: Linear Mediation Models
+
+The article studies a univariate exposure with `n = 300` continuous
+outcomes and `p = 500` candidate mediators whose noise has an
+autoregressive `0.5^|i-j|` covariance. The mediator-exposure coefficient
+is `Gamma_x = c1 * tau`, where `tau` is 0.1, 0.2, 0.3, 0.4, 0.5 for the
+first five mediators and an independent N(0, 0.5^2) draw for each of the
+others, the direct effect is
+`c2 = 0.5`, and two outcome-mediator patterns are contrasted:
+
+* **Setting (i), homogeneous:** `alpha_m = (1, 0.8, 0.6, 0.4, 0.2, 0, ...)`,
+  so all active mediators push the same way and the total indirect effect
+  is `beta = 0.7 * c1` (nonzero). This is the regime where ordinary tests
+  already work; the question is whether PE *adds* power.
+* **Setting (ii), contrasting:** `alpha_m = (1, -0.5, 0.4, -0.3, 0, ...)`,
+  four active mediators whose effects cancel so the total indirect effect
+  is `beta = 0` for every `c1`. This is the regime that defeats a
+  total-indirect-effect test, and where PE is designed to rescue power.
+
+POEMED maps these to `pattern = "homogeneous"` and `pattern = "contrasting"`
+in `simulate_mediation_data()` and `pe_power_curve()`. The article's
+Figure 3 sweeps `c1` from -1 to 1 (the symmetric design fills in the
+negative half), one panel per pattern:
+
+```{r lm-paper-scale, eval = FALSE}
+c1_grid <- seq(-1, 1, by = 0.1)
+lm_study <- pe_simulation_study(n = 300, p = 500, outcome = "continuous",
+                                patterns = c("homogeneous", "contrasting"),
+                                c1_grid = c1_grid, c2 = 0.5, n_rep = 1000,
+                                lambda_grid = seq(0.2, 0.39, length.out = 20),
+                                cores = 4, seed = 113)
+```
+
+The result has one row per pattern and `c1`, with the two rejection
+rates and the number of replications whose penalized fit selected no
+mediator (`n_empty`). `plot()` on a `pe_power_curve()` result draws the
+two curves against `c1`, as the guided-tour vignette shows.
+
+### The Real-Data-Motivated Heterogeneous Setting (Supplement Section S.4.4)
+
+The supplement adds a third, harder pattern in its Section S.4.4: a
+setting calibrated to the DNA-methylation case study of Guo et al.
+(2022), with **eleven active mediators of mixed sign** that neither all
+agree (homogeneous) nor exactly cancel (contrasting).
+`simulate_guo_mediation()` generates it from the calibration constants
+shipped as `guo_calibration`; the total indirect
+effect is `guo_calibration$beta_per_c1 * c1`, about `-1.597 * c1`. (The
+article reports `-1.5977`, computed from the full-precision Guo
+coefficients; the package ships those coefficients rounded to the three
+decimals printed in the supplement, which give `-1.597`.)
+
+```{r guo-data}
+d <- simulate_guo_mediation(c1 = 1, seed = 113)
+dim(d$M)                              # 85 x 1008, the case-study dimensions
+d$active_mediators                    # the 11 active loci
+round(d$beta, 4)                      # beta_per_c1 * c1, i.e. about -1.597
+```
+
+The supplement's Figure S.14 sweeps `c1` over `c(0, +/- 0.1, ..., +/- 1)`
+at the case-study size `n = 85`, without the calibrated confounders in
+its panel (a) and with them in its panel (b), averaged over 1,000
+replications. The article records no tuning grid for this setting, so
+the fits below use the package default (the example on
+`?simulate_guo_mediation` passes a shorter grid to stay fast and selects
+the same loci as the default):
+
+```{r guo-paper-scale, eval = FALSE}
+rej <- function(c1, confounders) {
+  ps <- replicate(1000, {
+    d <- simulate_guo_mediation(c1 = c1, confounders = confounders)
+    f <- pe_mediation(d$X, d$Y, d$M, Z = d$Z, outcome = "continuous")
+    c(f$value[f$term == "pval_hdmm"], f$value[f$term == "pval_pe"])
+  })
+  rowMeans(ps <= 0.05)
+}
+guo_without <- sapply(seq(-1, 1, by = 0.1), rej, confounders = FALSE)
+guo_with <- sapply(seq(-1, 1, by = 0.1), rej, confounders = TRUE)
+```
+
+## Section 4.2: Mediation Models With Generalized Linear Outcomes
+
+The same construction is repeated for non-continuous outcomes through a
+link function: a **logistic** model for binary outcomes (PE-HDGMM versus
+HDGMM) and a **Poisson** model for counts. Again `n = 300`, `p = 500`,
+with a homogeneous and a contrasting pattern apiece; the article fixes
+the direct effect at `c2 = 1` for the logistic models and `c2 = 0.4` for
+the Poisson models. The calls below run the four panels of the article's
+Figures 4 and 5. The Poisson homogeneous fits take tens of seconds each
+at this design, so that panel alone needs well over 100 hours of
+computing (days, even on 4 cores); each of the other three panels needs
+a few hours.
+
+```{r glm-paper-scale, eval = FALSE}
+c1_grid <- seq(-1, 1, by = 0.1)
+# Logistic: c2 = 1
+glm_logit <- pe_simulation_study(n = 300, p = 500, outcome = "binary",
+                                 patterns = c("homogeneous", "contrasting"),
+                                 c1_grid = c1_grid, c2 = 1, n_rep = 1000,
+                                 lambda_grid = seq(0.04, 0.2, length.out = 15),
+                                 cores = 4, seed = 113)
+# Poisson: c2 = 0.4
+glm_pois <- pe_simulation_study(n = 300, p = 500, outcome = "count",
+                                patterns = c("homogeneous", "contrasting"),
+                                c1_grid = c1_grid, c2 = 0.4, n_rep = 1000,
+                                lambda_grid = seq(0.7, 5, length.out = 15),
+                                cores = 4, seed = 113)
+```
+
+## Supplement Section S.4.1: Identifying Individual Mediators (FWER and FDR)
+
+Beyond the global test, the article's supplement studies how well the
+PE machinery **identifies which** individual mediators are active, and
+whether it controls the familywise error rate (FWER) or false discovery
+rate (FDR). POEMED exposes this through the `method` argument
+(`"Bonferroni"` for FWER, `"BH"` or `"BY"` for FDR) and the
+`report_all_methods` switch, which reports all three side by side as the
+supplement does; for a single fit, `pe_selection()` shows the selected
+set and the power-enhanced p-value under each method (the guided-tour
+vignette shows one).
+
+`pe_identification_study()` runs the supplement's identification
+*study*: it scores each method's selections against the truth set across
+a grid of `c1` and reports the empirical FWER, FDR, precision, and
+recall, with the supplement's definitions. A mediator counts as truly
+active when its outcome coefficient is nonzero, at every `c1` including
+`c1 = 0` (five mediators under the homogeneous pattern, four under the
+contrasting pattern); pass `truth = "mediation"` for the both-paths
+definition, under which nothing is active at `c1 = 0` and `recall` is
+`NA` there. The supplement's Tables S.1 to S.3 come from the calls
+below, one per pattern:
+
+```{r id-study-paper, eval = FALSE}
+id_study <- lapply(c("homogeneous", "contrasting"), function(pattern)
+  pe_identification_study(n = 300, p = 500, outcome = "continuous",
+                          pattern = pattern, c1_grid = seq(0, 1, by = 0.1),
+                          n_rep = 1000,
+                          lambda_grid = seq(0.2, 0.39, length.out = 20),
+                          cores = 4, seed = 113))
+```
+
+# Part II. Empirical Data Analysis (Article Section 5)
+
+The article asks whether health-care expenditure mediates the
+relationship between economic growth and population health across the
+world's countries. POEMED ships that exact data set, `WHO_health_mediation`:
+a country-by-year panel (2000--2021) with
+
+* **Exposure** `X`: annual growth in GDP per capita (World Bank),
+* **Mediators** `M`: 57 health-expenditure indicators (WHO Global Health
+  Expenditure Database),
+* **Outcomes** `Y`: five health outcomes, infant mortality (`imr`),
+  under-five mortality (`u5mr`), life expectancy (`leb`), low birthweight
+  (`lbw`), and undernourishment (`pou`),
+
+with WHO region and World Bank income group available as the grouping and
+confounding variables.
+
+```{r who-data}
+data(WHO_health_mediation)
+dim(WHO_health_mediation)
+table(WHO_health_mediation$region)
+```
+
+## Section 5, Table 1: Infant Mortality (IMR)
+
+`WHO_mediation_analysis()` builds a table in the layout of the article's
+per-outcome tables: it fits the global model (region, income, and year
+as confounders), then a separate model within each WHO region (income
+and year as confounders) and each income group (region and year as
+confounders), and reports the HDMM and PE p-values for the total
+indirect effect together with the mediators the PE component selects.
+
+The function searches one tuning grid, `seq(0.1, 2, length.out = 100)`,
+for the global all-country model and for every subgroup model alike. It
+is the grid behind the article's real-data tables (the article's text
+gives no grid; it states only that the tuning parameter is chosen by the
+HBIC criterion), and it is the default of both `lambda_grid`, for the
+subgroup models, and `lambda_grid_global`, for the global model, so no
+explicit grid arguments are needed.
+
+```{r who-imr}
+imr <- WHO_mediation_analysis("imr", groupings = c("global", "region", "income"))
+imr[, c("group", "n_countries", "pval_hdmm", "pval_pe", "selected_mediators")]
+```
+
+```{r who-imr-values, include = FALSE}
+p_hdmm <- function(g) formatC(signif(imr$pval_hdmm[imr$group == g], 2),
+                              digits = 2, format = "fg", flag = "#")
+p4 <- function(g) sprintf("%.4f", imr$pval_hdmm[imr$group == g])
+```
+
+Read this against the article's Table 1. The highlights:
+
+* **Global (ALL):** general government expenditure as a share of GDP
+  (`gge_gdp`) is the mediator the screen selects; HDMM is borderline
+  (`pval_hdmm` = `r p_hdmm("ALL")`) while PE is essentially zero.
+* **SEAR (South-East Asia):** HDMM sees nothing (`pval_hdmm` =
+  `r p_hdmm("SEAR")`) while PE detects external health expenditure per
+  capita in constant 2021 US dollars (`ext_usd2021_pc`).
+* **WPR (Western Pacific):** HDMM sees nothing (`pval_hdmm` =
+  `r p_hdmm("WPR")`) while PE detects compulsory health insurance as a
+  share of current health expenditure (`chi_che`).
+* **Low income:** HDMM sees nothing (`pval_hdmm` = `r p_hdmm("Low")`)
+  while PE detects domestic private health expenditure (`pvtd_usd2021`).
+* **EMR (Eastern Mediterranean), EUR (Europe), and high income:** the
+  benchmark rejects (`pval_hdmm` = `r p_hdmm("EMR")`, `r p_hdmm("EUR")`,
+  and `r p_hdmm("High")`; Table 1 prints the EUR value as 0.0001). In the
+  high-income group PE identifies out-of-pocket spending and social
+  health insurance as shares of current health expenditure (`oops_che`,
+  `shi_che`); in EMR and EUR no single indicator passes the screen, so
+  the PE p-value equals the benchmark's.
+* **AFR, AMR, lower-middle income, and upper-middle income:** neither
+  test detects mediation.
+
+In the global model, SEAR, WPR, and the low-income group, heterogeneous
+mediation hides the signal from the conventional test and the PE
+component recovers it. Among the income groups the strongest signals
+appear in the low- and high-income groups, as Yu and Kelley (in press)
+report in Table 1.
+
+The table above agrees with the article's Table 1 row for row. Every
+group's identified set is the one the table lists, and every benchmark
+p-value matches the printed value to four decimals except SEAR, which is
+`r p4("SEAR")` here where the table prints 0.6482. Where the table
+prints a PE p-value below `1e-12`, the package prints `< 0.0001`, its
+display floor; the values behind those entries are below `1e-12` as
+well.
+
+`summary()` digests the whole table, highlighting the groups where the
+power-enhanced test detects mediation the benchmark misses (the article's
+Table 1 sets those four rows in bold):
+
+```{r who-summary}
+summary(imr)
+```
+
+The supplement also gives an **extended** version of each table (its
+Table S.8 for IMR) that breaks the power-enhanced result out by
+multiplicity method. Pass
+`full_table = TRUE` to get that layout, with the PE p-value and selected
+mediators reported separately under Bonferroni (FWER), BH, and BY (FDR):
+
+```{r who-full}
+WHO_mediation_analysis("imr", groupings = "global", full_table = TRUE)
+```
+
+## The Other Outcomes, and the Region-by-Income Cells
+
+The remaining article outcomes (undernourishment in the article's
+Table 2, and life expectancy, under-five mortality, and low birthweight
+in the supplement's Tables S.10 to S.12) run identically; only the
+outcome code changes:
+
+```{r who-others, eval = FALSE}
+for (y in c("u5mr", "leb", "lbw", "pou"))
+  print(WHO_mediation_analysis(y, groupings = c("global", "region", "income")))
+```
+
+The article also drills into the **region-by-income** cells.
+`WHO_mediation_analysis()` returns the region-by-income block of the
+table in one call, with `NA` for the cells that have no countries or
+whose fit fails:
+
+```{r who-region-income, eval = FALSE}
+imr_cells <- WHO_mediation_analysis("imr", groupings = "region_income")
+```
+
+To look inside one cell, build it with `WHO_mediation_design()`, which
+assembles the exposure, outcome, mediator, and confounder blocks for a
+chosen subset, and fit it the way `WHO_mediation_analysis()` does. A
+small cell can contain indicators that never vary inside it. Such a
+column carries no signal and cannot be standardized, so the code below
+drops it by hand before standardizing, as the function does, and the
+print footer then names the selected mediators by their indicator codes.
+The code also passes the function's default grid, so this fit is the
+AFR-Upper-middle row of the block above:
+
+```{r who-cell}
+cell <- WHO_mediation_design("imr", region = "AFR", income = "Upper-middle")
+c(n_countries = cell$n_countries, mediators = ncol(cell$M))
+
+keep <- apply(cell$M, 2L, sd) > 0          # FALSE for a constant indicator
+cell$indicators[!keep]
+fit <- pe_mediation(scale(cell$X), cell$Y - mean(cell$Y),
+                    scale(cell$M[, keep, drop = FALSE]),
+                    Z = cell$Z, outcome = "continuous", scale = FALSE,
+                    lambda_grid = seq(0.1, 2, length.out = 100))
+fit[fit$term %in% c("pval_hdmm", "pval_pe"), ]
+```
+
+The selected mediator, domestic private health expenditure per capita in
+constant 2021 national currency units (`pvtd_ncu2021_pc`), is the one the
+article's Table 1 lists for this cell, and the benchmark p-value,
+`r sprintf("%.4f", fit$value[fit$term == "pval_hdmm"])`, is the value the
+table prints.
+
+## Six Cells Reported as NA
+
+Across the region-by-income blocks of the article's tables for its five
+outcomes (Table 1, Table 2, and Tables S.8 to S.12), six cells that the
+article prints with a value come back from `WHO_mediation_analysis()` as
+`NA`, each with a warning that names the cell and quotes the reason.
+They are of two kinds.
+
+**Four rank-deficient cells.** In the EMR-Lower-middle cells of IMR and
+U5MR and the AFR-Upper-middle cells of LEB and U5MR, two of the 57
+indicators are exactly collinear: domestic and external health
+expenditure as shares of current health expenditure (`dom_che`,
+`ext_che`) sum to 100 in every country-year of those cells. The
+AFR-Upper-middle cells add a second identity, since compulsory and
+social health insurance as shares of current health expenditure
+(`chi_che`, `shi_che`) coincide there (compulsory private insurance,
+`chi_pvt_che`, is zero throughout, which is why it was dropped as
+constant above). The benchmark test inverts the covariance matrix of
+the mediators the penalized fit selected, and when that selection keeps
+both members of a pair the matrix is singular; the fit stops with the
+error that the system is computationally singular, and the function
+reports the cell as `NA`. (The same two identities hold in the IMR cell
+above, where the selection keeps `ext_che` and `chi_che` without their
+partners, so the test goes through.) In three of the four hand fits
+below HBIC chooses 0.1, the smallest value of the article's grid, for the
+full model, the reduced model, or both; the fits keep that grid as the
+article's analysis did, so the warning a single `pe_mediation()` fit
+gives at an end of its grid is not shown in this section. The article's
+values come back when the collinearity is removed before the fit, as the
+article's analysis did: it dropped `dom_che` and `vfa_che` (near-exact partners of `ext_che`
+and `cfa_che`) in the EMR-Lower-middle cells, and `shi_che` and `ext_che`
+in the AFR-Upper-middle cells:
+
+```{r who-rank-deficient, warning = FALSE}
+cell <- WHO_mediation_design("imr", region = "EMR", income = "Lower-middle")
+range(cell$M[, "dom_che"] + cell$M[, "ext_che"])   # 100 in every row
+
+fit_cell <- function(outcome, region, income, drop) {
+  cell <- WHO_mediation_design(outcome, region = region, income = income)
+  keep <- apply(cell$M, 2L, sd) > 0 & !(cell$indicators %in% drop)
+  fit <- pe_mediation(scale(cell$X), cell$Y - mean(cell$Y),
+                      scale(cell$M[, keep, drop = FALSE]),
+                      Z = cell$Z, outcome = "continuous", scale = FALSE,
+                      lambda_grid = seq(0.1, 2, length.out = 100))
+  selected <- cell$indicators[keep][attr(fit, "selected_mediators")]
+  data.frame(outcome = outcome, cell = paste(region, income, sep = "-"),
+             dropped = paste(drop, collapse = ", "),
+             pval_hdmm = fit$value[fit$term == "pval_hdmm"],
+             selected = if (length(selected)) paste(selected, collapse = ", ")
+                        else "none")
+}
+rd <- rbind(fit_cell("imr",  "EMR", "Lower-middle",
+                     drop = c("dom_che", "vfa_che")),
+            fit_cell("u5mr", "EMR", "Lower-middle",
+                     drop = c("dom_che", "vfa_che")),
+            fit_cell("leb",  "AFR", "Upper-middle",
+                     drop = c("shi_che", "ext_che")),
+            fit_cell("u5mr", "AFR", "Upper-middle",
+                     drop = c("shi_che", "ext_che")))
+rd
+```
+
+The four benchmark p-values,
+`r paste(sprintf("%.4f", rd$pval_hdmm), collapse = ", ")`, are the values
+the article prints for these cells (Table 1 for IMR, Table S.10 for LEB,
+and Table S.11 for U5MR), and the U5MR AFR-Upper-middle cell recovers the
+mediator Table S.11 lists, `pvtd_ncu2021_pc`.
+
+**Two constant-outcome cells.** In the EUR-High and WPR-High cells of
+the undernourishment analysis (PoU, the article's Table 2), the outcome
+is 2.5 in every country-year of the cell: the World Bank publishes a
+prevalence of undernourishment below 2.5 percent as 2.5, its lower
+reporting bound, and the high-income countries of those two regions are
+all at that bound. There is no variation in the outcome to mediate, so
+`pe_mediation()` refuses the fit with the message that `Y` is constant,
+and the function reports the two cells as `NA`. Table 2 prints a p-value
+of 1 for both.
+
+```{r who-constant-y}
+sapply(c("EUR", "WPR"), function(r)
+  unique(WHO_mediation_design("pou", region = r, income = "High")$Y))
+```
+
+## Why a Mediator? Opening Up the Screening Step
+
+For any fit, `pe_mediators()` shows the evidence the PE component acted
+on: the two path statistics, the screening p-value (the larger of the
+two path p-values), and the `selected` flag, for every candidate the
+penalized fit selected. This is the per-mediator detail behind the last
+column of the article's tables. In this global model HBIC picks 0.1, the
+smallest value of the grid, as it does in about half of the article's
+cells; the warning a single fit gives at an end of its grid is not shown
+here either.
+
+```{r who-screen, warning = FALSE}
+des <- WHO_mediation_design("imr")                  # global IMR design
+gfit <- pe_mediation(scale(des$X), des$Y - mean(des$Y), scale(des$M),
+                     Z = des$Z, outcome = "continuous", scale = FALSE,
+                     lambda_grid = seq(0.1, 2, length.out = 100))
+pe_mediators(gfit)
+```
+
+# Reproducibility Notes
+
+* The global, regional, and income analyses above are deterministic.
+  Called with no explicit grid arguments, `WHO_mediation_analysis()`
+  searches `seq(0.1, 2, length.out = 100)`, the grid behind the
+  article's real-data tables, for the all-country model and for every
+  subgroup model, and returns the selected mediators and p-values shown
+  here.
+* Part I runs no simulation study. Its `eval = FALSE` blocks give the
+  calls that run the article's designs at their scale and with 1,000
+  replications: `n = 300` and `p = 500` on the grids of the article's
+  scripts (passed as `lambda_grid`) for Sections 4.1, 4.2, and S.4.1,
+  and the case-study `n = 85` and `p = 1008` on the package default grid
+  for supplement Section S.4.4, for which the article records no grid.
+  Set `cores` above 1 to parallelize and
+  `seed` for exact reproducibility; a seeded run with `cores` above 1
+  repeats exactly at the same number of cores.
+* Exact real-data p-values depend on the preprocessing. The article's
+  text says that covariates are standardized before fitting.
+  `WHO_mediation_analysis()` instead applies the preprocessing of the
+  authors' analysis code behind the article's tables: it standardizes the
+  exposure and mediators, centers the outcome, and leaves the confounders
+  (the region and income indicators and the year) unscaled. The region
+  and income factors enter through treatment contrasts with alphabetical
+  reference levels. The guided-tour vignette shows how to do this by hand
+  and what standardizing the confounders as well changes.
+
+# References
+
+Yu, X., & Kelley, K. (in press). Power Enhancement in High-Dimensional
+Heterogeneous Mediation Analysis. *Journal of the American Statistical
+Association*.
+
+Guo, X., Li, R., Liu, J., & Zeng, M. (2022). High-dimensional mediation
+analysis for selecting DNA methylation loci mediating childhood trauma
+and cortisol stress reactivity. *Journal of the American Statistical
+Association, 117*(539), 1110--1121.
+https://doi.org/10.1080/01621459.2022.2053136
+
+# Session Information
+
+```{r session-info}
+sessionInfo()
+```
